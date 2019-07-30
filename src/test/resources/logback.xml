@@ -4,4 +4,5 @@
 		resource="org/springframework/boot/logging/logback/base.xml" />
 	<logger name="org.apache" level="WARN" />
 	<logger name="log4j.logger.com.amazonaws" level="OFF" />
+	<logger name="io.elastest" level="DEBUG" />
 </configuration>

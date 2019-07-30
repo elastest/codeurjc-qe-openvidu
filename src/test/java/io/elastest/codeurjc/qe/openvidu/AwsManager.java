@@ -1,6 +1,5 @@
 package io.elastest.codeurjc.qe.openvidu;
 
-import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
@@ -18,9 +17,10 @@ import com.amazonaws.services.cloudformation.model.DeleteStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 
 public class AwsManager {
-    protected static final Logger logger = getLogger(lookup().lookupClass());
+    protected static final Logger logger = getLogger(AwsManager.class);
 
     protected AmazonCloudFormation awsCloudFormation;
 
@@ -55,16 +55,77 @@ public class AwsManager {
         return awsCloudFormation.createStack(createRequest);
     }
 
+    public String waitForStackInitCompletion(String stackName,
+            int stackExistTimeoutInSec) throws Exception {
+        long endWaitTime = System.currentTimeMillis()
+                + stackExistTimeoutInSec * 1000;
+
+        Boolean completed = false;
+        String stackStatus = "Unknown";
+        String stackReason = "";
+
+        System.out.print("Waiting for " + stackName);
+
+        // Wait for stack initialization will be completed
+        while (!completed) {
+            Stack stack;
+            do {
+                // Wait for stack created
+                Thread.sleep(2000);
+                stack = getStack(stackName);
+            } while (stack == null && System.currentTimeMillis() < endWaitTime);
+
+            if (stack == null) {
+                completed = true;
+                stackStatus = "NO_SUCH_STACK";
+                stackReason = "Stack has been deleted";
+            } else {
+                if (stack.getStackStatus()
+                        .equals(StackStatus.CREATE_COMPLETE.toString())
+                        || stack.getStackStatus()
+                                .equals(StackStatus.CREATE_FAILED.toString())
+                        || stack.getStackStatus()
+                                .equals(StackStatus.ROLLBACK_FAILED.toString())
+                        || stack.getStackStatus()
+                                .equals(StackStatus.DELETE_COMPLETE.toString())
+                        || stack.getStackStatus()
+                                .equals(StackStatus.DELETE_FAILED.toString())) {
+                    completed = true;
+                    stackStatus = stack.getStackStatus();
+                    stackReason = stack.getStackStatusReason();
+                }
+
+            }
+
+            // Show we are waiting
+            System.out.print(".");
+
+            // Not done yet so sleep for N seconds.
+            if (!completed)
+                Thread.sleep(5000);
+        }
+
+        // Show we are done
+        System.out.print("done\n");
+
+        logger.info("Stack creation completed, the stack {} completed with {}",
+                stackName, stackStatus + "(" + stackReason + ")");
+        return stackStatus;
+    }
+
     public List<Stack> getStacks() {
         return awsCloudFormation.describeStacks(new DescribeStacksRequest())
                 .getStacks();
     }
 
     public Stack getStack(String stackName) {
-        List<Stack> stacks = getStacks();
+        List<Stack> stacks = awsCloudFormation
+                .describeStacks(
+                        new DescribeStacksRequest().withStackName(stackName))
+                .getStacks();
 
         for (Stack stack : stacks) {
-            if (stack.getStackName() == stackName) {
+            if (stack.getStackName().trim().equals(stackName.trim())) {
                 return stack;
             }
         }

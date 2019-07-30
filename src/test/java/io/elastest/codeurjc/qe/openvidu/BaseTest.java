@@ -34,8 +34,8 @@ public class BaseTest {
     public static int MAX_SESSIONS = 10;
 
     public static String OPENVIDU_SECRET = "MY_SECRET";
-    protected static String OPENVIDU_SUT_URL = "https://localhost:4443/";
-    protected static String OPENVIDU_WEBAPP_URL = "http://localhost:8080/";
+    protected static String OPENVIDU_SUT_URL;
+    protected static String OPENVIDU_WEBAPP_URL;
 
     public static int SESSIONS = 10;
     public static int USERS_SESSION = 7;
@@ -50,7 +50,7 @@ public class BaseTest {
     protected static AwsManager awsManager;
     protected static JsonObject awsConfig;
 
-    protected static final String STACK_NAME = "OpenViduWebAppStack";
+    protected static final String STACK_NAME = "QEElasTestOpenViduWebApp";
     protected static final String CLOUD_FORMATION_FILE_NAME = "webapp.yml";
 
     protected static boolean isDevelopment = false;
@@ -194,8 +194,10 @@ public class BaseTest {
         parameters.add(imageId);
 
         awsManager.createStack(STACK_NAME, template, parameters);
+        awsManager.waitForStackInitCompletion(STACK_NAME, 50);
 
         Stack stack = awsManager.getStack(STACK_NAME);
+        logger.info("Stack: {}", stack);
         if (stack != null) {
             for (Output output : stack.getOutputs()) {
                 if (output.getOutputKey() == "WebsiteURL") {
@@ -203,6 +205,11 @@ public class BaseTest {
                     break;
                 }
             }
+        }
+
+        if (OPENVIDU_WEBAPP_URL == null || OPENVIDU_WEBAPP_URL.isEmpty()) {
+            throw new Exception(
+                    "OpenVidu WebApp Url is empty, probably because the stack was not obtained correctly");
         }
 
     }

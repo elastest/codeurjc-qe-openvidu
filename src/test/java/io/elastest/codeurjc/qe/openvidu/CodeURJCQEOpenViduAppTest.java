@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class CodeURJCQEOpenViduAppTest extends BaseTest {
     public static int CURRENT_SESSIONS = 0;
+    private CountDownLatch waitForSessionReadyLatch;
 
     @Test
     public void loadTest(TestInfo info) throws Exception {
@@ -23,6 +25,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
     public void startBrowsers(TestInfo info) throws Exception {
         CURRENT_SESSIONS++;
+        waitForSessionReadyLatch = new CountDownLatch(USERS_BY_SESSION);
 
         final List<Runnable> browserThreads = new ArrayList<>();
         // Start N browsers
@@ -44,6 +47,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         }
 
         if (CURRENT_SESSIONS < MAX_SESSIONS) {
+            waitForSessionReadyLatch.await();
+
             // Start new session
             this.startBrowsers(info);
         } else {
@@ -88,6 +93,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         browserClient.waitUntilEventReaches("streamCreated", USERS_BY_SESSION);
 
         browserClient.stopEventPolling();
+        waitForSessionReadyLatch.countDown();
     }
 
 }
