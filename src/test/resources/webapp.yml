@@ -23,14 +23,6 @@ Parameters:
     Description: "AMI Id for OpenVidu Pro"
     Type: String
   
-  MyDomainName: 
-    Description: "Valid DNS record name like mycompany.com."
-    Type: String
-  
-  PublicElasticIP:
-    Description: "Valid AWS elastic IP for using with Let's Encrypt or OwnCertificate."
-    Type: String
-  
   OpenViduSecret:
     Description: "Secret to connect to your OpenVidu Server."
     Type: String
@@ -42,19 +34,6 @@ Parameters:
     Default: selfsigned
     AllowedValues:
     - selfsigned
-    - letsencrypt
-    - owncert
-  LetsEncryptEmail:
-    Description: "Email necesary for Let's Encrypt notifications."
-    Type: String
-  
-  OwnCertCRT:
-    Description: "URL to the CRT file"
-    Type: String
-
-  OwnCertKEY: 
-    Description: "URL to the KEY file"
-    Type: String
 
   FreeHTTPAccesToRecordingVideos:
     Description: "Do you want your recordings to be access publicly?"
@@ -102,11 +81,6 @@ Metadata:
           default: SSL Certificate Configuration
         Parameters:
         - WhichCert
-        - LetsEncryptEmail
-        - MyDomainName
-        - PublicElasticIP
-        - OwnCertCRT
-        - OwnCertKEY
       -
         Label:
           default: Openvidu Configuration
@@ -122,23 +96,10 @@ Metadata:
     ParameterLabels:
       WhichCert: 
         default: Type of SSL Certificate
-      MyDomainName:
-        default: Fully qualified domain name
-      PublicElasticIP: 
-        default: Elastic IP
-      LetsEncryptEmail:
-        default: Email
       OpenViduSecret: 
         default: OpenVidu Secret
       FreeHTTPAccesToRecordingVideos: 
           default: Free HTTP access to recorded videos
-
-Conditions: 
-  NoSelfSigned:
-    'Fn::Not':
-      - 'Fn::Equals':
-          - Ref: WhichCert
-          - selfsigned
 
 Resources:
   OpenviduServer:
@@ -201,13 +162,6 @@ Resources:
         ToPort: 65535
         CidrIp: 0.0.0.0/0
 
-  MyEIP:
-    Type: AWS::EC2::EIPAssociation
-    Condition: NoSelfSigned
-    Properties:
-      InstanceId: !Ref OpenviduServer
-      EIP: !Ref PublicElasticIP
-
   WaitCondition:
     Type: AWS::CloudFormation::WaitCondition
     CreationPolicy:
@@ -223,12 +177,3 @@ Outputs:
         - - 'https://'
           - !GetAtt OpenviduServer.PublicDnsName 
           - ':4443'
-  
-  WebsiteURLLE:
-    Description: "Use this URL to connect to OpenVidu with user and password if you're using Let's Encrypt"
-    Value: !Join
-        - ''
-        - - 'https://'
-          - !Ref MyDomainName
-          - ':4443'
-    Condition: NoSelfSigned

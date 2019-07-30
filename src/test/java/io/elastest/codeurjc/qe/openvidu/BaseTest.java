@@ -18,16 +18,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.cloudformation.AmazonCloudFormation;
-import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
-import com.amazonaws.services.cloudformation.model.CreateStackRequest;
-import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
-import com.amazonaws.services.cloudformation.model.DescribeStackResourcesRequest;
-import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Output;
+import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
@@ -50,9 +46,10 @@ public class BaseTest {
 
     protected static List<BrowserClient> browserClientList;
     public static Map<String, List<Runnable>> sessionBrowserThreads = new HashMap<>();
-    protected static Map<String, Object> awsConfig;
 
-    protected static AmazonCloudFormation awsCloudFormation;
+    protected static AwsManager awsManager;
+    protected static JsonObject awsConfig;
+
     protected static final String STACK_NAME = "OpenViduWebAppStack";
     protected static final String CLOUD_FORMATION_FILE_NAME = "webapp.yml";
 
@@ -115,14 +112,6 @@ public class BaseTest {
             OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
         }
 
-        if (sutHost == null) {
-            OPENVIDU_SUT_URL = "http://localhost:8080/";
-        } else {
-            sutPort = sutPort != null ? sutPort : "8080";
-            sutProtocol = sutProtocol != null ? sutProtocol : "http";
-
-            OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
-        }
         logger.info("Sut URL: {}", OPENVIDU_SUT_URL);
 
         /* ************************************ */
@@ -148,68 +137,83 @@ public class BaseTest {
         String sshUser = System.getenv("AWS_SSH_USER");
         String sshPrivateKey = System.getenv("AWS_SSH_PRIVATE_KEY");
 
+        awsManager = new AwsManager(accessKeyId, secretAccessKey, region);
+
         // Instances config
-        String awsInstancesConfig = System.getenv("AWS_AWS_INSTANCES_CONFIG");
+        String awsAmiId = System.getenv("AWS_AMI_ID");
         String instanceType = System.getenv("AWS_INSTANCE_TYPE");
         String keyName = System.getenv("AWS_KEY_NAME");
         String securityGroups = System.getenv("AWS_SECURITY_GROUPS");
         String tagSpecifications = System.getenv("AWS_TAG_SPECIFICATIONS");
-        String tags = System.getenv("AWS_TAGS");
         int numInstances = Integer.parseInt(System.getenv("AWS_NUM_INSTANCES"));
 
-        awsConfig = new HashMap<String, Object>();
+        awsConfig = new JsonObject();
 
-        awsConfig.put("region", region);
-        awsConfig.put("secretAccessKey", secretAccessKey);
-        awsConfig.put("accessKeyId", accessKeyId);
-        awsConfig.put("sshUser", sshUser);
-        awsConfig.put("sshPrivateKey", sshPrivateKey);
-        awsConfig.put("awsInstancesConfig", awsInstancesConfig);
-        awsConfig.put("instanceType", instanceType);
-        awsConfig.put("keyName", keyName);
-        awsConfig.put("securityGroups", securityGroups);
-        awsConfig.put("tagSpecifications", tagSpecifications);
-        awsConfig.put("tags", tags);
-        awsConfig.put("numInstances", numInstances);
+        awsConfig.addProperty("region", region);
+        awsConfig.addProperty("secretAccessKey", secretAccessKey);
+        awsConfig.addProperty("accessKeyId", accessKeyId);
+        awsConfig.addProperty("sshUser", sshUser);
+        awsConfig.addProperty("sshPrivateKey", sshPrivateKey);
+
+        // Instances Config
+        JsonObject awsInstancesConfig = new JsonObject();
+        awsInstancesConfig.addProperty("amiId", awsAmiId);
+        awsInstancesConfig.addProperty("instanceType", instanceType);
+        awsInstancesConfig.addProperty("keyName", keyName);
+        awsInstancesConfig.addProperty("securityGroups", securityGroups);
+        awsInstancesConfig.addProperty("numInstances", numInstances);
+
+        JsonParser parser = new JsonParser();
+        JsonElement tagSpecificationsElement = parser.parse(tagSpecifications);
+        awsInstancesConfig.add("tagSpecifications", tagSpecificationsElement);
+        awsConfig.add("awsInstancesConfig", awsInstancesConfig);
 
         logger.info("AWS Config: {}", awsConfig);
 
         /* *********************************** */
         /* ******** WebApp Sut init ******** */
         /* *********************************** */
-
         if (!isDevelopment) {
-            BasicAWSCredentials credentials = new BasicAWSCredentials(
-                    accessKeyId, secretAccessKey);
-            AWSStaticCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(
-                    credentials);
+            deployWebapp(keyName, awsAmiId);
+        }
+    }
 
-            awsCloudFormation = AmazonCloudFormationClient.builder()
-                    .withRegion(region).withCredentials(credentialsProvider)
-                    .build();
+    private static void deployWebapp(String keyName, String amiID)
+            throws Exception {
+        List<Parameter> parameters = new ArrayList<Parameter>();
+        String template = getTestResourceAsString(CLOUD_FORMATION_FILE_NAME);
 
-            CreateStackRequest createRequest = new CreateStackRequest();
-            createRequest.setStackName(STACK_NAME);
-            createRequest.setTemplateBody(convertStreamToString(BaseTest.class
-                    .getResourceAsStream(CLOUD_FORMATION_FILE_NAME)));
-            logger.info("Creating a stack called "
-                    + createRequest.getStackName() + ".");
-            awsCloudFormation.createStack(createRequest);
+        Parameter keyNameParam = awsManager.createParameter("KeyName", keyName);
+        parameters.add(keyNameParam);
 
-            for (Stack stack : awsCloudFormation
-                    .describeStacks(new DescribeStacksRequest()).getStacks()) {
-                DescribeStackResourcesRequest stackResourceRequest = new DescribeStackResourcesRequest();
-                stackResourceRequest.setStackName(stack.getStackName());
+        Parameter openViduSecret = awsManager.createParameter("OpenViduSecret",
+                OPENVIDU_SECRET);
+        parameters.add(openViduSecret);
 
-                for (Output output : stack.getOutputs()) {
-                    if (output.getOutputKey() == "WebsiteURL") {
-                        OPENVIDU_WEBAPP_URL = output.getOutputValue();
-                        break;
-                    }
+        Parameter imageId = awsManager.createParameter("ImageId", amiID);
+        parameters.add(imageId);
+
+        awsManager.createStack(STACK_NAME, template, parameters);
+
+        Stack stack = awsManager.getStack(STACK_NAME);
+        if (stack != null) {
+            for (Output output : stack.getOutputs()) {
+                if (output.getOutputKey() == "WebsiteURL") {
+                    OPENVIDU_WEBAPP_URL = output.getOutputValue();
+                    break;
                 }
             }
         }
 
+    }
+
+    private static String getTestResourceAsString(String name)
+            throws Exception {
+        InputStream resource = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(name);
+        String resourceStr = convertStreamToString(resource);
+        logger.info("Resource {}", resourceStr);
+        return resourceStr;
     }
 
     @BeforeEach
@@ -237,12 +241,10 @@ public class BaseTest {
     }
 
     @AfterAll
-    public void clear() {
-        if (awsCloudFormation != null) {
+    public static void clear() {
+        if (awsManager != null) {
             logger.info("Deleting webapp stack instance");
-            DeleteStackRequest deleteRequest = new DeleteStackRequest();
-            deleteRequest.setStackName(STACK_NAME);
-            awsCloudFormation.deleteStack(deleteRequest);
+            awsManager.deleteStack(STACK_NAME);
         }
     }
 
