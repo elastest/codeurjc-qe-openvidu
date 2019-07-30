@@ -76,7 +76,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         // "&secret=" + OPENVIDU_SECRET + "&sessionId="
         // + CURRENT_SESSIONS + "&userId=" + userId);
         browserClient.getDriver()
-                .get(OPENVIDU_WEBAPP_URL + "?publicurl=" + OPENVIDU_URL
+                .get(OPENVIDU_WEBAPP_URL + "?publicurl=" + OPENVIDU_SUT_URL
                         + "&secret=" + OPENVIDU_SECRET + "&sessionId="
                         + CURRENT_SESSIONS + "&userId=" + userId);
 

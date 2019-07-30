@@ -38,52 +38,44 @@ public class BaseTest {
     public static int MAX_SESSIONS = 10;
 
     public static String OPENVIDU_SECRET = "MY_SECRET";
-    public static String OPENVIDU_URL = "https://localhost:4443/";
-    public static String APP_URL = "http://localhost:8080/";
+    protected static String OPENVIDU_SUT_URL = "https://localhost:4443/";
+    protected static String OPENVIDU_WEBAPP_URL = "http://localhost:8080/";
+
     public static int SESSIONS = 10;
     public static int USERS_SESSION = 7;
     public static int SECONDS_OF_WAIT = 40;
-    public static int NUMBER_OF_POLLS = 8;
     public static int BROWSER_POLL_INTERVAL = 1000;
-    public static int SERVER_POLL_INTERVAL = 5000;
-    public static String SERVER_SSH_USER = "ubuntu";
-    public static String SERVER_SSH_HOSTNAME;
-    public static String PRIVATE_KEY_PATH = "/opt/openvidu/testload/key.pem";
 
     protected static String EUS_URL;
-    protected static String OPENVIDU_SUT_URL;
-    protected static String OPENVIDU_WEBAPP_URL;
 
     protected static List<BrowserClient> browserClientList;
     public static Map<String, List<Runnable>> sessionBrowserThreads = new HashMap<>();
     protected static Map<String, Object> awsConfig;
 
     protected static AmazonCloudFormation awsCloudFormation;
-    protected static String stackName = "OpenViduWebAppStack";
-    protected static String cloudFormationFile;
+    protected static final String STACK_NAME = "OpenViduWebAppStack";
+    protected static final String CLOUD_FORMATION_FILE_NAME = "webapp.yml";
+
+    protected static boolean isDevelopment = false;
 
     public static void initParameters() {
-        String openviduUrl = System.getProperty("OPENVIDU_URL");
+        String openviduUrl = System.getProperty("OPENVIDU_SUT_URL");
         String openviduSecret = System.getProperty("OPENVIDU_SECRET");
-        String appUrl = System.getProperty("APP_URL");
+        String webappUrl = System.getProperty("OPENVIDU_WEBAPP_URL");
         String sessions = System.getProperty("SESSIONS");
         String usersSession = System.getProperty("USERS_SESSION");
         String secondsOfWait = System.getProperty("SECONDS_OF_WAIT");
-        String numberOfPolls = System.getProperty("NUMBER_OF_POLLS");
         String browserPollInterval = System
                 .getProperty("BROWSER_POLL_INTERVAL");
-        String serverPollInterval = System.getProperty("SERVER_POLL_INTERVAL");
-        String serverSshUser = System.getProperty("SERVER_SSH_USER");
-        String privateKeyPath = System.getProperty("PRIVATE_KEY_PATH");
 
         if (openviduUrl != null) {
-            OPENVIDU_URL = openviduUrl;
+            OPENVIDU_SUT_URL = openviduUrl;
         }
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
         }
-        if (appUrl != null) {
-            APP_URL = appUrl;
+        if (webappUrl != null) {
+            OPENVIDU_WEBAPP_URL = webappUrl;
         }
         if (sessions != null) {
             SESSIONS = Integer.parseInt(sessions);
@@ -94,20 +86,9 @@ public class BaseTest {
         if (secondsOfWait != null) {
             SECONDS_OF_WAIT = Integer.parseInt(secondsOfWait);
         }
-        if (numberOfPolls != null) {
-            NUMBER_OF_POLLS = Integer.parseInt(numberOfPolls);
-        }
+
         if (browserPollInterval != null) {
             BROWSER_POLL_INTERVAL = Integer.parseInt(browserPollInterval);
-        }
-        if (serverPollInterval != null) {
-            SERVER_POLL_INTERVAL = Integer.parseInt(serverPollInterval);
-        }
-        if (serverSshUser != null) {
-            SERVER_SSH_USER = serverSshUser;
-        }
-        if (privateKeyPath != null) {
-            PRIVATE_KEY_PATH = privateKeyPath;
         }
 
     }
@@ -197,35 +178,34 @@ public class BaseTest {
         /* ******** WebApp Sut init ******** */
         /* *********************************** */
 
-        cloudFormationFile = System
-                .getenv("OPENVIDU_WEBAPP_CLOUDFORMATION_PATH");
+        if (!isDevelopment) {
+            BasicAWSCredentials credentials = new BasicAWSCredentials(
+                    accessKeyId, secretAccessKey);
+            AWSStaticCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(
+                    credentials);
 
-        BasicAWSCredentials credentials = new BasicAWSCredentials(accessKeyId,
-                secretAccessKey);
-        AWSStaticCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(
-                credentials);
+            awsCloudFormation = AmazonCloudFormationClient.builder()
+                    .withRegion(region).withCredentials(credentialsProvider)
+                    .build();
 
-        awsCloudFormation = AmazonCloudFormationClient.builder()
-                .withRegion(region).withCredentials(credentialsProvider)
-                .build();
+            CreateStackRequest createRequest = new CreateStackRequest();
+            createRequest.setStackName(STACK_NAME);
+            createRequest.setTemplateBody(convertStreamToString(BaseTest.class
+                    .getResourceAsStream(CLOUD_FORMATION_FILE_NAME)));
+            logger.info("Creating a stack called "
+                    + createRequest.getStackName() + ".");
+            awsCloudFormation.createStack(createRequest);
 
-        CreateStackRequest createRequest = new CreateStackRequest();
-        createRequest.setStackName(stackName);
-        createRequest.setTemplateBody(convertStreamToString(
-                BaseTest.class.getResourceAsStream(cloudFormationFile)));
-        logger.info("Creating a stack called " + createRequest.getStackName()
-                + ".");
-        awsCloudFormation.createStack(createRequest);
+            for (Stack stack : awsCloudFormation
+                    .describeStacks(new DescribeStacksRequest()).getStacks()) {
+                DescribeStackResourcesRequest stackResourceRequest = new DescribeStackResourcesRequest();
+                stackResourceRequest.setStackName(stack.getStackName());
 
-        for (Stack stack : awsCloudFormation
-                .describeStacks(new DescribeStacksRequest()).getStacks()) {
-            DescribeStackResourcesRequest stackResourceRequest = new DescribeStackResourcesRequest();
-            stackResourceRequest.setStackName(stack.getStackName());
-
-            for (Output output : stack.getOutputs()) {
-                if (output.getOutputKey() == "WebsiteURL") {
-                    OPENVIDU_WEBAPP_URL = output.getOutputValue();
-                    break;
+                for (Output output : stack.getOutputs()) {
+                    if (output.getOutputKey() == "WebsiteURL") {
+                        OPENVIDU_WEBAPP_URL = output.getOutputValue();
+                        break;
+                    }
                 }
             }
         }
@@ -261,7 +241,7 @@ public class BaseTest {
         if (awsCloudFormation != null) {
             logger.info("Deleting webapp stack instance");
             DeleteStackRequest deleteRequest = new DeleteStackRequest();
-            deleteRequest.setStackName(stackName);
+            deleteRequest.setStackName(STACK_NAME);
             awsCloudFormation.deleteStack(deleteRequest);
         }
     }
