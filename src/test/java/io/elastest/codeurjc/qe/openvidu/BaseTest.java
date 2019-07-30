@@ -16,7 +16,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
-import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -32,24 +31,91 @@ import com.amazonaws.services.cloudformation.model.Stack;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-public class ElastestBaseTest {
+public class BaseTest {
     protected static final Logger logger = getLogger(lookup().lookupClass());
 
-    protected static String eusURL;
-    protected static String openviduSutUrl;
-    protected static String openviduWebAppUrl;
+    public static int USERS_BY_SESSION = 7;
+    public static int MAX_SESSIONS = 10;
 
-    protected static List<WebDriver> driverList;
+    public static String OPENVIDU_SECRET = "MY_SECRET";
+    public static String OPENVIDU_URL = "https://localhost:4443/";
+    public static String APP_URL = "http://localhost:8080/";
+    public static int SESSIONS = 10;
+    public static int USERS_SESSION = 7;
+    public static int SECONDS_OF_WAIT = 40;
+    public static int NUMBER_OF_POLLS = 8;
+    public static int BROWSER_POLL_INTERVAL = 1000;
+    public static int SERVER_POLL_INTERVAL = 5000;
+    public static String SERVER_SSH_USER = "ubuntu";
+    public static String SERVER_SSH_HOSTNAME;
+    public static String PRIVATE_KEY_PATH = "/opt/openvidu/testload/key.pem";
 
+    protected static String EUS_URL;
+    protected static String OPENVIDU_SUT_URL;
+    protected static String OPENVIDU_WEBAPP_URL;
+
+    protected static List<BrowserClient> browserClientList;
+    public static Map<String, List<Runnable>> sessionBrowserThreads = new HashMap<>();
     protected static Map<String, Object> awsConfig;
 
     protected static AmazonCloudFormation awsCloudFormation;
     protected static String stackName = "OpenViduWebAppStack";
     protected static String cloudFormationFile;
 
+    public static void initParameters() {
+        String openviduUrl = System.getProperty("OPENVIDU_URL");
+        String openviduSecret = System.getProperty("OPENVIDU_SECRET");
+        String appUrl = System.getProperty("APP_URL");
+        String sessions = System.getProperty("SESSIONS");
+        String usersSession = System.getProperty("USERS_SESSION");
+        String secondsOfWait = System.getProperty("SECONDS_OF_WAIT");
+        String numberOfPolls = System.getProperty("NUMBER_OF_POLLS");
+        String browserPollInterval = System
+                .getProperty("BROWSER_POLL_INTERVAL");
+        String serverPollInterval = System.getProperty("SERVER_POLL_INTERVAL");
+        String serverSshUser = System.getProperty("SERVER_SSH_USER");
+        String privateKeyPath = System.getProperty("PRIVATE_KEY_PATH");
+
+        if (openviduUrl != null) {
+            OPENVIDU_URL = openviduUrl;
+        }
+        if (openviduSecret != null) {
+            OPENVIDU_SECRET = openviduSecret;
+        }
+        if (appUrl != null) {
+            APP_URL = appUrl;
+        }
+        if (sessions != null) {
+            SESSIONS = Integer.parseInt(sessions);
+        }
+        if (usersSession != null) {
+            USERS_SESSION = Integer.parseInt(usersSession);
+        }
+        if (secondsOfWait != null) {
+            SECONDS_OF_WAIT = Integer.parseInt(secondsOfWait);
+        }
+        if (numberOfPolls != null) {
+            NUMBER_OF_POLLS = Integer.parseInt(numberOfPolls);
+        }
+        if (browserPollInterval != null) {
+            BROWSER_POLL_INTERVAL = Integer.parseInt(browserPollInterval);
+        }
+        if (serverPollInterval != null) {
+            SERVER_POLL_INTERVAL = Integer.parseInt(serverPollInterval);
+        }
+        if (serverSshUser != null) {
+            SERVER_SSH_USER = serverSshUser;
+        }
+        if (privateKeyPath != null) {
+            PRIVATE_KEY_PATH = privateKeyPath;
+        }
+
+    }
+
     @BeforeAll
     public static void setupClass() throws Exception {
-        driverList = new ArrayList<>();
+        initParameters();
+        browserClientList = new ArrayList<>();
 
         /* *********************************** */
         /* ******** Openvidu Sut init ******** */
@@ -60,34 +126,34 @@ public class ElastestBaseTest {
         String sutProtocol = System.getenv("ET_SUT_PROTOCOL");
 
         if (sutHost == null) {
-            openviduSutUrl = "http://localhost:8080/";
+            OPENVIDU_SUT_URL = "http://localhost:8080/";
         } else {
             sutPort = sutPort != null ? sutPort : "8080";
             sutProtocol = sutProtocol != null ? sutProtocol : "http";
 
-            openviduSutUrl = sutProtocol + "://" + sutHost + ":" + sutPort;
+            OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
         }
 
         if (sutHost == null) {
-            openviduSutUrl = "http://localhost:8080/";
+            OPENVIDU_SUT_URL = "http://localhost:8080/";
         } else {
             sutPort = sutPort != null ? sutPort : "8080";
             sutProtocol = sutProtocol != null ? sutProtocol : "http";
 
-            openviduSutUrl = sutProtocol + "://" + sutHost + ":" + sutPort;
+            OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
         }
-        logger.info("Sut URL: {}", openviduSutUrl);
+        logger.info("Sut URL: {}", OPENVIDU_SUT_URL);
 
         /* ************************************ */
         /* ************* EUS init ************* */
         /* ************************************ */
-        eusURL = System.getenv("ET_EUS_API");
+        EUS_URL = System.getenv("ET_EUS_API");
 
-        if (eusURL == null) {
+        if (EUS_URL == null) {
             logger.warn("NOT Using EUS URL");
             WebDriverManager.chromedriver().setup();
         } else {
-            logger.info("Using EUS URL: {}", eusURL);
+            logger.info("Using EUS URL: {}", EUS_URL);
         }
 
         /* *************************************** */
@@ -130,7 +196,6 @@ public class ElastestBaseTest {
         /* *********************************** */
         /* ******** WebApp Sut init ******** */
         /* *********************************** */
-        // TODO
 
         cloudFormationFile = System
                 .getenv("OPENVIDU_WEBAPP_CLOUDFORMATION_PATH");
@@ -146,9 +211,8 @@ public class ElastestBaseTest {
 
         CreateStackRequest createRequest = new CreateStackRequest();
         createRequest.setStackName(stackName);
-        createRequest
-                .setTemplateBody(convertStreamToString(ElastestBaseTest.class
-                        .getResourceAsStream(cloudFormationFile)));
+        createRequest.setTemplateBody(convertStreamToString(
+                BaseTest.class.getResourceAsStream(cloudFormationFile)));
         logger.info("Creating a stack called " + createRequest.getStackName()
                 + ".");
         awsCloudFormation.createStack(createRequest);
@@ -160,14 +224,11 @@ public class ElastestBaseTest {
 
             for (Output output : stack.getOutputs()) {
                 if (output.getOutputKey() == "WebsiteURL") {
-                    // TODO
-                } else if (output.getOutputKey() == "WebsiteURLLE") {
-                    // TODO
+                    OPENVIDU_WEBAPP_URL = output.getOutputValue();
+                    break;
                 }
             }
         }
-
-        // openviduWebAppUrl =
 
     }
 
@@ -179,10 +240,10 @@ public class ElastestBaseTest {
 
     @AfterEach
     public void teardown(TestInfo info) {
-        if (driverList != null) {
-            for (WebDriver driver : driverList) {
-                if (driver != null) {
-                    driver.quit();
+        if (browserClientList != null) {
+            for (BrowserClient browserClient : browserClientList) {
+                if (browserClient != null) {
+                    browserClient.dispose();
                 }
             }
 
@@ -190,7 +251,9 @@ public class ElastestBaseTest {
 
         String testName = info.getTestMethod().get().getName();
         logger.info("##### Finish test: {}", testName);
-        driverList = new ArrayList<>();
+        browserClientList = new ArrayList<>();
+
+        sessionBrowserThreads = new HashMap<>();
     }
 
     @AfterAll
