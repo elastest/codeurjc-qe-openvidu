@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 
-import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -149,7 +149,7 @@ public class BaseTest {
         awsInstancesConfig.addProperty("numInstances", numInstances);
 
         JsonParser parser = new JsonParser();
-        JsonElement tagSpecificationsElement = parser.parse(tagSpecifications);
+        JsonArray tagSpecificationsElement = parser.parse(tagSpecifications).getAsJsonArray();
         awsInstancesConfig.add("tagSpecifications", tagSpecificationsElement);
         awsConfig.add("awsInstancesConfig", awsInstancesConfig);
 
