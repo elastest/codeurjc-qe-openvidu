@@ -41,11 +41,11 @@ public class AwsManager {
     }
 
     public CreateStackResult createStack(String stackName, String template,
-            List<Parameter> parameters) {
+            List<Parameter> parameters, boolean disableRollback) {
         CreateStackRequest createRequest = new CreateStackRequest();
         createRequest.setStackName(stackName);
         createRequest.setTemplateBody(template);
-
+        createRequest.setDisableRollback(disableRollback);
         if (parameters != null && parameters.size() > 0) {
             createRequest.setParameters(parameters);
         }
@@ -71,8 +71,8 @@ public class AwsManager {
             Stack stack;
             do {
                 // Wait for stack created
-                Thread.sleep(2000);
                 stack = getStack(stackName);
+                Thread.sleep(2000);
             } while (stack == null && System.currentTimeMillis() < endWaitTime);
 
             if (stack == null) {
@@ -80,12 +80,14 @@ public class AwsManager {
                 stackStatus = "NO_SUCH_STACK";
                 stackReason = "Stack has been deleted";
             } else {
-                if (stack.getStackStatus()
+                if (stack.getStackStatus().trim()
                         .equals(StackStatus.CREATE_COMPLETE.toString())
                         || stack.getStackStatus()
                                 .equals(StackStatus.CREATE_FAILED.toString())
                         || stack.getStackStatus()
                                 .equals(StackStatus.ROLLBACK_FAILED.toString())
+                        || stack.getStackStatus().equals(
+                                StackStatus.ROLLBACK_COMPLETE.toString())
                         || stack.getStackStatus()
                                 .equals(StackStatus.DELETE_COMPLETE.toString())
                         || stack.getStackStatus()
