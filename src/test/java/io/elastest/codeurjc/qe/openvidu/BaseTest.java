@@ -139,7 +139,7 @@ public class BaseTest {
         awsConfig.addProperty("secretAccessKey", secretAccessKey);
         awsConfig.addProperty("accessKeyId", accessKeyId);
         awsConfig.addProperty("sshUser", sshUser);
-        awsConfig.add("sshPrivateKey", parser.parse(sshPrivateKey));
+        awsConfig.addProperty("sshPrivateKey", sshPrivateKey);
 
         // Instances Config
 

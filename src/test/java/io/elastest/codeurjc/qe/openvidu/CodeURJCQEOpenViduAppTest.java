@@ -1,9 +1,10 @@
 package io.elastest.codeurjc.qe.openvidu;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,10 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
 
@@ -91,7 +96,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
     }
 
     public void startBrowser(TestInfo info, String userId)
-            throws MalformedURLException, TimeoutException {
+            throws TimeoutException, JsonParseException, JsonMappingException,
+            IOException {
         logger.info("Starting browser for user {} and session {}", userId,
                 CURRENT_SESSIONS);
 
@@ -118,7 +124,11 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                     testName + "_" + userId.replaceAll("-", "_"));
             // AWS capabilities for browsers
 
-            capabilities.setCapability("awsConfig", awsConfig);
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> awsConfigMap = mapper
+                    .readValue(awsConfig.toString(), Map.class);
+
+            capabilities.setCapability("awsConfig", awsConfigMap);
 
             // This flag sets the video input
             options.addArguments("--use-file-for-fake-video-capture="
