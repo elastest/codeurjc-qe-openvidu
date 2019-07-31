@@ -139,7 +139,8 @@ public class BaseTest {
         awsConfig.addProperty("secretAccessKey", secretAccessKey);
         awsConfig.addProperty("accessKeyId", accessKeyId);
         awsConfig.addProperty("sshUser", sshUser);
-        awsConfig.addProperty("sshPrivateKey", sshPrivateKey);
+        awsConfig.addProperty("sshPrivateKey",
+                sshPrivateKey.replace("\\r\\n", System.lineSeparator()));
 
         // Instances Config
 
@@ -159,13 +160,6 @@ public class BaseTest {
         awsConfig.add("awsInstancesConfig", awsInstancesConfig);
 
         logger.info("AWS Config: {}", awsConfig);
-
-        /* *********************************** */
-        /* ******** WebApp Sut init ******** */
-        /* *********************************** */
-        if (!isDevelopment) {
-            // deployWebapp(keyName, awsAmiId);
-        }
 
         if (OPENVIDU_WEBAPP_URL == null || OPENVIDU_WEBAPP_URL.isEmpty()) {
             throw new Exception(
