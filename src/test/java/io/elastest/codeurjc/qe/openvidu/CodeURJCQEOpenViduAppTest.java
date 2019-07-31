@@ -59,7 +59,6 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
         if (CURRENT_SESSIONS < MAX_SESSIONS) {
             try {
-
                 waitForSessionReadyLatch.await();
             } catch (AbortedException e) {
                 logger.error("Some browser does not have a stable session: {}",
