@@ -132,23 +132,23 @@ public class BaseTest {
         String tagSpecifications = System.getenv("AWS_TAG_SPECIFICATIONS");
         int numInstances = Integer.parseInt(System.getenv("AWS_NUM_INSTANCES"));
 
+        JsonParser parser = new JsonParser();
         awsConfig = new JsonObject();
 
         awsConfig.addProperty("region", region);
         awsConfig.addProperty("secretAccessKey", secretAccessKey);
         awsConfig.addProperty("accessKeyId", accessKeyId);
         awsConfig.addProperty("sshUser", sshUser);
-        awsConfig.addProperty("sshPrivateKey", sshPrivateKey);
+        awsConfig.add("sshPrivateKey", parser.parse(sshPrivateKey));
 
         // Instances Config
+
         JsonObject awsInstancesConfig = new JsonObject();
         awsInstancesConfig.addProperty("amiId", awsAmiId);
         awsInstancesConfig.addProperty("instanceType", instanceType);
         awsInstancesConfig.addProperty("keyName", keyName);
 
         awsInstancesConfig.addProperty("numInstances", numInstances);
-
-        JsonParser parser = new JsonParser();
         JsonArray securityGroupsElement = parser.parse(securityGroups)
                 .getAsJsonArray();
         awsInstancesConfig.add("securityGroups", securityGroupsElement);

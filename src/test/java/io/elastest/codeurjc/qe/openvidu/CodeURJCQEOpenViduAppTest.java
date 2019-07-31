@@ -46,7 +46,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 try {
                     this.startBrowser(info, userId);
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    waitForSessionReadyLatch.abort(e.getMessage());
                 }
             });
         }
@@ -111,7 +111,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         } else {
             logger.info("Using ElasTest EUS URL: {}", EUS_URL);
 
-            capabilities.setCapability("testName", testName);
+            capabilities.setCapability("testName",
+                    testName + "_" + userId.replaceAll("-", "_"));
             // AWS capabilities for browsers
             capabilities.setCapability("awsConfig", awsConfig);
 
