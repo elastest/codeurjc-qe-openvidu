@@ -19,7 +19,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
-import io.openvidu.load.test.browser.ChromeBrowser;
 
 public class CodeURJCQEOpenViduAppTest extends BaseTest {
     public static int CURRENT_SESSIONS = 0;
