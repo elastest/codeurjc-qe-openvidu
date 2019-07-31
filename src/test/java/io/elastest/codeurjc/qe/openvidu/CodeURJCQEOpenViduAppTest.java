@@ -46,6 +46,9 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 try {
                     this.startBrowser(info, userId);
                 } catch (Exception e) {
+                    logger.error(
+                            "Error on start browser of user {} at session {}: {}",
+                            userId, CURRENT_SESSIONS, e.getMessage());
                     waitForSessionReadyLatch.abort(e.getMessage());
                 }
             });
