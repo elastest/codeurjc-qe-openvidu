@@ -77,11 +77,11 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         BrowserClient browserClient = new BrowserClient(driver);
         browserClientList.add(browserClient);
 
-        // TODO browser.getDriver().get(APP_URL + "?publicurl=" + OPENVIDU_URL +
-        // "&secret=" + OPENVIDU_SECRET + "&sessionId="
-        // + CURRENT_SESSIONS + "&userId=" + userId);
+        String publicUrl = OPENVIDU_SUT_URL
+                + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
+
         browserClient.getDriver()
-                .get(OPENVIDU_WEBAPP_URL + "?publicurl=" + OPENVIDU_SUT_URL
+                .get(OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl
                         + "&secret=" + OPENVIDU_SECRET + "&sessionId="
                         + CURRENT_SESSIONS + "&userId=" + userId);
 

@@ -18,9 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 
-import com.amazonaws.services.cloudformation.model.Output;
-import com.amazonaws.services.cloudformation.model.Parameter;
-import com.amazonaws.services.cloudformation.model.Stack;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -47,7 +44,6 @@ public class BaseTest {
     protected static List<BrowserClient> browserClientList;
     public static Map<String, List<Runnable>> sessionBrowserThreads = new HashMap<>();
 
-    protected static AwsManager awsManager;
     protected static JsonObject awsConfig;
 
     protected static final String STACK_NAME = "QEElasTestOpenViduWebApp";
@@ -56,23 +52,14 @@ public class BaseTest {
     protected static boolean isDevelopment = false;
 
     public static void initParameters() {
-        String openviduUrl = System.getProperty("OPENVIDU_SUT_URL");
-        String openviduSecret = System.getProperty("OPENVIDU_SECRET");
-        String webappUrl = System.getProperty("OPENVIDU_WEBAPP_URL");
-        String sessions = System.getProperty("SESSIONS");
-        String usersSession = System.getProperty("USERS_SESSION");
-        String secondsOfWait = System.getProperty("SECONDS_OF_WAIT");
-        String browserPollInterval = System
-                .getProperty("BROWSER_POLL_INTERVAL");
+        String openviduSecret = System.getenv("OPENVIDU_SECRET");
+        String sessions = System.getenv("SESSIONS");
+        String usersSession = System.getenv("USERS_SESSION");
+        String secondsOfWait = System.getenv("SECONDS_OF_WAIT");
+        String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
 
-        if (openviduUrl != null) {
-            OPENVIDU_SUT_URL = openviduUrl;
-        }
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
-        }
-        if (webappUrl != null) {
-            OPENVIDU_WEBAPP_URL = webappUrl;
         }
         if (sessions != null) {
             SESSIONS = Integer.parseInt(sessions);
@@ -103,16 +90,18 @@ public class BaseTest {
         String sutPort = System.getenv("ET_SUT_PORT");
         String sutProtocol = System.getenv("ET_SUT_PROTOCOL");
 
-        if (sutHost == null) {
-            OPENVIDU_SUT_URL = "http://localhost:8080/";
-        } else {
+        if (sutHost != null) {
             sutPort = sutPort != null ? sutPort : "8080";
             sutProtocol = sutProtocol != null ? sutProtocol : "http";
 
             OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
+            OPENVIDU_WEBAPP_URL = sutProtocol + "://" + sutHost;
+        } else {
+            throw new Exception("No Sut URL");
         }
 
-        logger.info("Sut URL: {}", OPENVIDU_SUT_URL);
+        logger.info("OpenVidu Sut URL: {}", OPENVIDU_SUT_URL);
+        logger.info("OpenVidu Webapp URL: {}", OPENVIDU_WEBAPP_URL);
 
         /* ************************************ */
         /* ************* EUS init ************* */
@@ -136,8 +125,6 @@ public class BaseTest {
         String accessKeyId = System.getenv("AWS_ACCESS_KEY_ID");
         String sshUser = System.getenv("AWS_SSH_USER");
         String sshPrivateKey = System.getenv("AWS_SSH_PRIVATE_KEY");
-
-        awsManager = new AwsManager(accessKeyId, secretAccessKey, region);
 
         // Instances config
         String awsAmiId = System.getenv("AWS_AMI_ID");
@@ -174,53 +161,13 @@ public class BaseTest {
         /* ******** WebApp Sut init ******** */
         /* *********************************** */
         if (!isDevelopment) {
-            deployWebapp(keyName, awsAmiId);
-        }
-    }
-
-    private static void deployWebapp(String keyName, String amiID)
-            throws Exception {
-        List<Parameter> parameters = new ArrayList<Parameter>();
-        String template = getTestResourceAsString(CLOUD_FORMATION_FILE_NAME);
-
-        Parameter keyNameParam = awsManager.createParameter("KeyName", keyName);
-        parameters.add(keyNameParam);
-
-        Parameter openViduSecret = awsManager.createParameter("OpenViduSecret",
-                OPENVIDU_SECRET);
-        parameters.add(openViduSecret);
-
-        Parameter imageId = awsManager.createParameter("ImageId", amiID);
-        parameters.add(imageId);
-
-        awsManager.createStack(STACK_NAME, template, parameters);
-        awsManager.waitForStackInitCompletion(STACK_NAME, 50);
-
-        Stack stack = awsManager.getStack(STACK_NAME);
-        logger.info("Stack: {}", stack);
-        if (stack != null) {
-            for (Output output : stack.getOutputs()) {
-                if (output.getOutputKey() == "WebsiteURL") {
-                    OPENVIDU_WEBAPP_URL = output.getOutputValue();
-                    break;
-                }
-            }
+            // deployWebapp(keyName, awsAmiId);
         }
 
         if (OPENVIDU_WEBAPP_URL == null || OPENVIDU_WEBAPP_URL.isEmpty()) {
             throw new Exception(
                     "OpenVidu WebApp Url is empty, probably because the stack was not obtained correctly");
         }
-
-    }
-
-    private static String getTestResourceAsString(String name)
-            throws Exception {
-        InputStream resource = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(name);
-        String resourceStr = convertStreamToString(resource);
-        logger.info("Resource {}", resourceStr);
-        return resourceStr;
     }
 
     @BeforeEach
@@ -249,10 +196,7 @@ public class BaseTest {
 
     @AfterAll
     public static void clear() {
-        if (awsManager != null) {
-            logger.info("Deleting webapp stack instance");
-            awsManager.deleteStack(STACK_NAME);
-        }
+
     }
 
     public static String convertStreamToString(InputStream in)
