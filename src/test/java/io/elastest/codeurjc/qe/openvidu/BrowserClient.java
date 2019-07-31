@@ -5,6 +5,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,6 +27,9 @@ public class BrowserClient {
 
     private Thread pollingThread;
     private WebDriver driver;
+    private String userId;
+    private int session;
+
     private AtomicBoolean stopped = new AtomicBoolean(false);
 
     private Queue<JsonObject> eventQueue;
@@ -33,8 +38,14 @@ public class BrowserClient {
 
     JsonParser jsonParser = new JsonParser();
 
-    public BrowserClient(WebDriver driver) {
+    public BrowserClient(WebDriver driver, String userId, int session) {
         this.driver = driver;
+        this.userId = userId;
+        this.session = session;
+
+        this.eventQueue = new ConcurrentLinkedQueue<JsonObject>();
+        this.numEvents = new ConcurrentHashMap<>();
+        this.eventCountdowns = new ConcurrentHashMap<>();
     }
 
     public WebDriver getDriver() {
@@ -42,6 +53,8 @@ public class BrowserClient {
     }
 
     public void startEventPolling() {
+        logger.info("Starting event polling in user {} session {}", userId,
+                session);
         this.pollingThread = new Thread(() -> {
             while (!this.stopped.get()) {
                 this.getBrowserEvents();
@@ -74,13 +87,20 @@ public class BrowserClient {
         this.pollingThread.interrupt();
     }
 
-    public void waitUntilEventReaches(String eventName, int eventNumber)
+    public void waitForEvent(String eventName, int eventNumber)
             throws TimeoutException {
+        logger.info(
+                "Waiting for event {} to occur {} times in user {} session {}",
+                eventName, eventNumber, userId, session);
+
         CountDownLatch eventSignal = new CountDownLatch(eventNumber);
         this.setCountDown(eventName, eventSignal);
         try {
-            if (!eventSignal.await(40 * 1000, TimeUnit.MILLISECONDS)) {
-                throw (new TimeoutException(eventName));
+            int timeoutInSecs = 40;
+            if (!eventSignal.await(timeoutInSecs * 1000,
+                    TimeUnit.MILLISECONDS)) {
+                throw (new TimeoutException("Timeout (" + timeoutInSecs
+                        + "sec) in waiting for event " + eventName));
             }
         } catch (TimeoutException e) {
             throw e;
@@ -112,12 +132,13 @@ public class BrowserClient {
         for (JsonElement ev : events) {
             JsonObject event = ev.getAsJsonObject();
             String eventName = event.get("event").getAsString();
-
+            logger.info("New event received in user {} of session {}: {}",
+                    userId, session, event);
             this.eventQueue.add(event);
             getNumEvents(eventName).incrementAndGet();
 
             if (this.eventCountdowns.get(eventName) != null) {
-                this.eventCountdowns.get(eventName).countDown();
+                doCountDown(eventName);
             }
         }
 
@@ -129,10 +150,19 @@ public class BrowserClient {
     }
 
     private void setCountDown(String eventName, CountDownLatch cd) {
+        logger.info("Setting countDownLatch for event {} in user {} session {}",
+                eventName, userId, session);
         this.eventCountdowns.put(eventName, cd);
         for (int i = 0; i < getNumEvents(eventName).get(); i++) {
-            cd.countDown();
+            doCountDown(eventName);
         }
+    }
+
+    private void doCountDown(String eventName) {
+        logger.info("Doing countdown of event {} in user {} session {}",
+                eventName, userId, session);
+        this.eventCountdowns.get(eventName).countDown();
+
     }
 
     public void dispose() {

@@ -34,8 +34,6 @@ public class BaseTest {
     protected static String OPENVIDU_SUT_URL;
     protected static String OPENVIDU_WEBAPP_URL;
 
-    public static int SESSIONS = 10;
-    public static int USERS_SESSION = 7;
     public static int SECONDS_OF_WAIT = 40;
     public static int BROWSER_POLL_INTERVAL = 1000;
 
@@ -53,8 +51,8 @@ public class BaseTest {
 
     public static void initParameters() {
         String openviduSecret = System.getenv("OPENVIDU_SECRET");
-        String sessions = System.getenv("SESSIONS");
-        String usersSession = System.getenv("USERS_SESSION");
+        String sessions = System.getenv("MAX_SESSIONS");
+        String usersSession = System.getenv("USERS_BY_SESSION");
         String secondsOfWait = System.getenv("SECONDS_OF_WAIT");
         String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
 
@@ -62,10 +60,10 @@ public class BaseTest {
             OPENVIDU_SECRET = openviduSecret;
         }
         if (sessions != null) {
-            SESSIONS = Integer.parseInt(sessions);
+            MAX_SESSIONS = Integer.parseInt(sessions);
         }
         if (usersSession != null) {
-            USERS_SESSION = Integer.parseInt(usersSession);
+            USERS_BY_SESSION = Integer.parseInt(usersSession);
         }
         if (secondsOfWait != null) {
             SECONDS_OF_WAIT = Integer.parseInt(secondsOfWait);
