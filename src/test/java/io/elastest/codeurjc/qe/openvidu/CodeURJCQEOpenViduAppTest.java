@@ -118,12 +118,12 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             // AWS capabilities for browsers
             capabilities.setCapability("awsConfig", awsConfig);
 
-            // This flag sets the video input
-            options.addArguments("--use-file-for-fake-video-capture="
-                    + "/opt/openvidu/fakevideo.y4m");
-            // This flag sets the audio input
-            options.addArguments("--use-file-for-fake-audio-capture="
-                    + "/opt/openvidu/fakeaudio.wav");
+//            // This flag sets the video input
+//            options.addArguments("--use-file-for-fake-video-capture="
+//                    + "/opt/openvidu/fakevideo.y4m");
+//            // This flag sets the audio input
+//            options.addArguments("--use-file-for-fake-audio-capture="
+//                    + "/opt/openvidu/fakeaudio.wav");
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 
             driver = new RemoteWebDriver(new URL(EUS_URL), capabilities);
