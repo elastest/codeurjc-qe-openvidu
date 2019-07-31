@@ -42,7 +42,7 @@ public class BaseTest {
     protected static List<BrowserClient> browserClientList;
     public static Map<String, List<Runnable>> sessionBrowserThreads = new HashMap<>();
 
-    protected static JsonObject awsConfig;
+    protected static Map<String, Object> awsConfig;
 
     protected static final String STACK_NAME = "QEElasTestOpenViduWebApp";
     protected static final String CLOUD_FORMATION_FILE_NAME = "webapp.yml";
@@ -133,13 +133,13 @@ public class BaseTest {
         int numInstances = Integer.parseInt(System.getenv("AWS_NUM_INSTANCES"));
 
         JsonParser parser = new JsonParser();
-        awsConfig = new JsonObject();
+        awsConfig = new HashMap<>();
 
-        awsConfig.addProperty("region", region);
-        awsConfig.addProperty("secretAccessKey", secretAccessKey);
-        awsConfig.addProperty("accessKeyId", accessKeyId);
-        awsConfig.addProperty("sshUser", sshUser);
-        awsConfig.add("sshPrivateKey", parser.parse(sshPrivateKey));
+        awsConfig.put("region", region);
+        awsConfig.put("secretAccessKey", secretAccessKey);
+        awsConfig.put("accessKeyId", accessKeyId);
+        awsConfig.put("sshUser", sshUser);
+        awsConfig.put("sshPrivateKey", parser.parse(sshPrivateKey));
 
         // Instances Config
 
@@ -156,7 +156,7 @@ public class BaseTest {
         JsonArray tagSpecificationsElement = parser.parse(tagSpecifications)
                 .getAsJsonArray();
         awsInstancesConfig.add("tagSpecifications", tagSpecificationsElement);
-        awsConfig.add("awsInstancesConfig", awsInstancesConfig);
+        awsConfig.put("awsInstancesConfig", awsInstancesConfig);
 
         logger.info("AWS Config: {}", awsConfig);
 

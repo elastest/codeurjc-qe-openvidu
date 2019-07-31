@@ -96,7 +96,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 CURRENT_SESSIONS);
 
         String testName = info.getTestMethod().get().getName();
-        
+
         WebDriver driver;
         DesiredCapabilities capabilities = DesiredCapabilities.chrome();
         ChromeOptions options = new ChromeOptions();
@@ -117,6 +117,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             capabilities.setCapability("testName",
                     testName + "_" + userId.replaceAll("-", "_"));
             // AWS capabilities for browsers
+
             capabilities.setCapability("awsConfig", awsConfig);
 
             // This flag sets the video input
