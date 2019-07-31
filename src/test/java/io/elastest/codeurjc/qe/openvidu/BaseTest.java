@@ -145,11 +145,16 @@ public class BaseTest {
         awsInstancesConfig.addProperty("amiId", awsAmiId);
         awsInstancesConfig.addProperty("instanceType", instanceType);
         awsInstancesConfig.addProperty("keyName", keyName);
-        awsInstancesConfig.addProperty("securityGroups", securityGroups);
+
         awsInstancesConfig.addProperty("numInstances", numInstances);
 
         JsonParser parser = new JsonParser();
-        JsonArray tagSpecificationsElement = parser.parse(tagSpecifications).getAsJsonArray();
+        JsonArray securityGroupsElement = parser.parse(securityGroups)
+                .getAsJsonArray();
+        awsInstancesConfig.add("securityGroups", securityGroupsElement);
+
+        JsonArray tagSpecificationsElement = parser.parse(tagSpecifications)
+                .getAsJsonArray();
         awsInstancesConfig.add("tagSpecifications", tagSpecificationsElement);
         awsConfig.add("awsInstancesConfig", awsInstancesConfig);
 
