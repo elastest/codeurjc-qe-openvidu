@@ -96,6 +96,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 CURRENT_SESSIONS);
 
         String testName = info.getTestMethod().get().getName();
+        
         WebDriver driver;
         DesiredCapabilities capabilities = DesiredCapabilities.chrome();
         ChromeOptions options = new ChromeOptions();
