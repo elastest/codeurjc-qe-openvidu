@@ -96,7 +96,7 @@ public class BrowserClient {
         CountDownLatch eventSignal = new CountDownLatch(eventNumber);
         this.setCountDown(eventName, eventSignal);
         try {
-            int timeoutInSecs = 40;
+            int timeoutInSecs = 60;
             if (!eventSignal.await(timeoutInSecs * 1000,
                     TimeUnit.MILLISECONDS)) {
                 throw (new TimeoutException("Timeout (" + timeoutInSecs
