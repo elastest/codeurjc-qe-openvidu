@@ -138,6 +138,11 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                     + "/opt/openvidu/fakeaudio.wav");
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 
+            String browserVersion = System.getProperty("browserVersion");
+            if (browserVersion != null) {
+                capabilities.setVersion(browserVersion);
+            }
+
             driver = new RemoteWebDriver(new URL(EUS_URL), capabilities);
         }
         BrowserClient browserClient = new BrowserClient(driver, userId,
