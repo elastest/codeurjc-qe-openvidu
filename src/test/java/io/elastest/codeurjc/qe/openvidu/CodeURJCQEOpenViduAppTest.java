@@ -48,8 +48,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             monitoringManager.sendAtomicMetric("participants", "uds",
                     CURRENT_SESSIONS * USERS_BY_SESSION + "", "openvidu");
         } catch (Exception e) {
-            logger.error("Cannot send metric nº of participants",
-                    e);
+            logger.error("Cannot send metric nº of participants", e);
         }
 
         final List<Runnable> browserThreads = new ArrayList<>();
@@ -67,8 +66,6 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 }
             });
         }
-
-        sessionBrowserThreads.put(CURRENT_SESSIONS + "", browserThreads);
 
         for (Runnable r : browserThreads) {
             browserInitializationTaskExecutor.execute(r);
@@ -179,7 +176,6 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             String msg = "Error on waiting for events on user " + userId
                     + " session " + CURRENT_SESSIONS + ": " + e.getMessage();
             logger.error(msg);
-            waitForSessionReadyLatch.abort(msg);
             throw e;
         }
         waitForSessionReadyLatch.countDown();

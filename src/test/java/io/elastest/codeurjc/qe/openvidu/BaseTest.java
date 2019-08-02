@@ -40,7 +40,6 @@ public class BaseTest {
     protected static String EUS_URL;
 
     protected static List<BrowserClient> browserClientList;
-    public static Map<String, List<Runnable>> sessionBrowserThreads = new HashMap<>();
 
     protected static JsonObject awsConfig;
 
@@ -192,7 +191,6 @@ public class BaseTest {
         logger.info("##### Finish test: {}", testName);
         browserClientList = new ArrayList<>();
 
-        sessionBrowserThreads = new HashMap<>();
     }
 
     @AfterAll
