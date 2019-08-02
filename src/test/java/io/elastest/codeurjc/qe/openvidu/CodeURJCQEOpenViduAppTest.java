@@ -65,7 +65,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             browserInitializationTaskExecutor.execute(r);
         }
 
-        if (CURRENT_SESSIONS <= MAX_SESSIONS) {
+        if (CURRENT_SESSIONS < MAX_SESSIONS) {
             try {
                 waitForSessionReadyLatch.await();
             } catch (AbortedException e) {
@@ -138,6 +138,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             options.addArguments("--use-file-for-fake-audio-capture="
                     + "/opt/openvidu/fakeaudio.wav");
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+            capabilities.setCapability("elastestTimeout", 3600);
 
             String browserVersion = System.getProperty("browserVersion");
             if (browserVersion != null) {
