@@ -96,7 +96,7 @@ public class BrowserClient {
         CountDownLatch eventSignal = new CountDownLatch(eventNumber);
         this.setCountDown(eventName, eventSignal);
         try {
-            int timeoutInSecs = 180;
+            int timeoutInSecs = 60;
             if (!eventSignal.await(timeoutInSecs * 1000,
                     TimeUnit.MILLISECONDS)) {
                 throw (new TimeoutException("Timeout (" + timeoutInSecs
@@ -118,8 +118,6 @@ public class BrowserClient {
                             + "window.resetEventsAndStats();"
                             + "return result;");
         } catch (Exception e) {
-            logger.info("Cannot to get events for user {} at session {}",
-                    userId, session);
             return;
         }
 
