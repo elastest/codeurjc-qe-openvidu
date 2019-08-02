@@ -59,7 +59,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 try {
                     this.startBrowser(info, userId);
                     waitForSessionReadyLatch.countDown();
-                } catch (Exception e) {
+                } catch (TimeoutException | IOException
+                        | NullPointerException e) {
                     logger.error(
                             "Error on start browser of user {} at session {}: {}",
                             userId, CURRENT_SESSIONS, e.getMessage());
@@ -104,8 +105,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
     @SuppressWarnings("unchecked")
     public void startBrowser(TestInfo info, String userId)
-            throws TimeoutException, JsonParseException, JsonMappingException,
-            IOException {
+            throws TimeoutException, IOException {
         logger.info("Starting browser for user {} and session {}", userId,
                 CURRENT_SESSIONS);
 
