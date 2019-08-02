@@ -41,6 +41,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
     public void startBrowsers(TestInfo info) throws Exception {
         CURRENT_SESSIONS++;
+        System.out.println();
+        logger.info("Starting session {}", CURRENT_SESSIONS);
         waitForSessionReadyLatch = new CountDownLatchWithException(
                 USERS_BY_SESSION);
 
