@@ -7,7 +7,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -47,9 +46,8 @@ public class MonitoringManager {
     private void sendMonitoring(String body) throws Exception {
 
         if (url != null && component != null && execid != null) {
-            URLConnection con = url.openConnection();
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
             logger.info("Sending monitoring to {}: {}", url, body);
-            HttpURLConnection http = (HttpURLConnection) con;
             http.setRequestMethod("POST");
             http.setDoOutput(true);
 
@@ -58,15 +56,17 @@ public class MonitoringManager {
 
             http.setFixedLengthStreamingMode(length);
             http.setRequestProperty("Content-Type",
-                    "application/json; charset=UTF-8");
+                    "application/json; charset=UTF-8"); 
             http.connect();
             try (OutputStream os = http.getOutputStream()) {
                 os.write(out);
+            } finally {
+                http.disconnect();
             }
 
         } else {
-            throw new Exception(
-                    "Trace {} not sent. url, component or execid are null");
+            throw new Exception("Trace '" + body
+                    + "' not sent: url, component or execid are null");
         }
     }
 
