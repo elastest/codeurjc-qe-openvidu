@@ -36,6 +36,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         logger.info("Users by session {}. Max Sessions {}", USERS_BY_SESSION,
                 MAX_SESSIONS);
         startBrowsers(info);
+        logger.info("Test finished!");
     }
 
     public void startBrowsers(TestInfo info) throws Exception {

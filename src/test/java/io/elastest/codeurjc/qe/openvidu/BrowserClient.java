@@ -167,6 +167,9 @@ public class BrowserClient {
 
     public void dispose() {
         if (driver != null) {
+            logger.info(
+                    "Stopping browser of user {} session {}. This process can take a while, since the videos are going to be downloaded",
+                    userId, session);
             driver.quit();
         }
     }
