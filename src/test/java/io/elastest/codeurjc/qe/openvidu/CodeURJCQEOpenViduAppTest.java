@@ -65,7 +65,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             browserInitializationTaskExecutor.execute(r);
         }
 
-        if (CURRENT_SESSIONS < MAX_SESSIONS) {
+        if (CURRENT_SESSIONS <= MAX_SESSIONS) {
             try {
                 waitForSessionReadyLatch.await();
             } catch (AbortedException e) {
@@ -95,6 +95,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
     }
 
+    @SuppressWarnings("unchecked")
     public void startBrowser(TestInfo info, String userId)
             throws TimeoutException, JsonParseException, JsonMappingException,
             IOException {
