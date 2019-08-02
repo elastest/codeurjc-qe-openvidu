@@ -127,7 +127,7 @@ public class MonitoringManager {
         jsonObject.addProperty("metricName", metricName);
         jsonObject.addProperty(metricName, value);
 
-        sendMonitoring(jsonObject.getAsString());
+        sendMonitoring(jsonObject.toString());
     }
 
     public void sendComposedMetric(String metricName, String stream,
