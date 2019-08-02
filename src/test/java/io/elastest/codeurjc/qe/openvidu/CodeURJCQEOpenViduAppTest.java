@@ -58,6 +58,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             browserThreads.add(() -> {
                 try {
                     this.startBrowser(info, userId);
+                    waitForSessionReadyLatch.countDown();
                 } catch (Exception e) {
                     logger.error(
                             "Error on start browser of user {} at session {}: {}",
@@ -178,8 +179,6 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             logger.error(msg);
             throw e;
         }
-        waitForSessionReadyLatch.countDown();
-
     }
 
 }
