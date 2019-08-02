@@ -135,25 +135,6 @@ public class MonitoringManager {
         return "\"" + msg + "\"";
     }
 
-    public static String[] generateRandomWords(int numberOfWords) {
-        String[] randomStrings = new String[numberOfWords];
-        Random random = new Random();
-        for (int i = 0; i < numberOfWords; i++) {
-            char[] word = new char[random.nextInt(8) + 3];
-            for (int j = 0; j < word.length; j++) {
-                word[j] = (char) ('a' + random.nextInt(26));
-            }
-            randomStrings[i] = new String(word);
-        }
-        return randomStrings;
-    }
-
-    public static int randInt(int min, int max) {
-        Random rand = new Random();
-        int randomNum = rand.nextInt((max - min) + 1) + min;
-
-        return randomNum;
-    }
 
     @Override
     public String toString() {
