@@ -48,6 +48,7 @@ public class BaseTest {
     protected static final String CLOUD_FORMATION_FILE_NAME = "webapp.yml";
 
     protected static boolean isDevelopment = false;
+    public static MonitoringManager monitoringManager;
 
     public static void initParameters() {
         String openviduSecret = System.getenv("OPENVIDU_SECRET");
@@ -165,6 +166,8 @@ public class BaseTest {
             throw new Exception(
                     "OpenVidu WebApp Url is empty, probably because the stack was not obtained correctly");
         }
+
+        monitoringManager = new MonitoringManager();
     }
 
     @BeforeEach

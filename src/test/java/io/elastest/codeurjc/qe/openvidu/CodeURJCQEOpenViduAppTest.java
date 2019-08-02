@@ -44,6 +44,13 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         waitForSessionReadyLatch = new CountDownLatchWithException(
                 USERS_BY_SESSION);
 
+        try {
+            monitoringManager.sendAtomicMetric("participants", "uds",
+                    CURRENT_SESSIONS * USERS_BY_SESSION + "", "openvidu");
+        } catch (Exception e) {
+            logger.error("Cannot send metric nº of participants");
+        }
+
         final List<Runnable> browserThreads = new ArrayList<>();
         // Start N browsers
         for (int i = 0; i < USERS_BY_SESSION; i++) {
