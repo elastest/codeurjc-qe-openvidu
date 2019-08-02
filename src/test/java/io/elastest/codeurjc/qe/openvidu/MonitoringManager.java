@@ -117,7 +117,9 @@ public class MonitoringManager {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("component", component);
         jsonObject.addProperty("exec", execid);
-        jsonObject.addProperty("containerName", containerName);
+        if (containerName != null) {
+            jsonObject.addProperty("containerName", containerName);
+        }
         jsonObject.addProperty("et_type", metricName);
         jsonObject.addProperty("stream", stream);
         jsonObject.addProperty("stream_type", "atomic_metric");
