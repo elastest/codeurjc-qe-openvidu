@@ -27,15 +27,15 @@ public class MonitoringManager {
     URL url;
 
     public MonitoringManager() {
-        withSSL = false;
-        endpoint = System.getenv("ET_MON_LSHTTP_API");
+        withSSL = true;
+        endpoint = System.getenv("ET_MON_LSHTTPS_API");
         if (endpoint == null) {
-            endpoint = System.getenv("ET_MON_LSHTTPS_API");
-            withSSL = true;
+            endpoint = System.getenv("ET_MON_LSHTTP_API");
+            withSSL = false;
         }
 
         execid = System.getenv("ET_MON_EXEC");
-        component = System.getenv("COMPONENT");
+        component = "test";
         containerName = System.getenv("CONTAINER_NAME");
         try {
             url = new URL(endpoint);
@@ -81,6 +81,9 @@ public class MonitoringManager {
                     os.write(out);
                 }
             }
+        } else {
+            throw new Exception(
+                    "Trace {} not sent. url, component or execid are null");
         }
     }
 
