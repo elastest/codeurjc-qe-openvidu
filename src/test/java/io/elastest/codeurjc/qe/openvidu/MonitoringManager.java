@@ -1,16 +1,14 @@
 package io.elastest.codeurjc.qe.openvidu;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.Random;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import org.slf4j.Logger;
 
@@ -42,6 +40,7 @@ public class MonitoringManager {
         } catch (Exception e) {
             // TODO: handle exception
         }
+
     }
 
     // HTTP POST request
@@ -50,37 +49,21 @@ public class MonitoringManager {
         if (url != null && component != null && execid != null) {
             URLConnection con = url.openConnection();
             logger.info("Sending monitoring to {}: {}", url, body);
-            if (withSSL) {
-                HttpURLConnection http = (HttpURLConnection) con;
-                http.setRequestMethod("POST");
-                http.setDoOutput(true);
+            HttpURLConnection http = (HttpURLConnection) con;
+            http.setRequestMethod("POST");
+            http.setDoOutput(true);
 
-                byte[] out = body.getBytes(StandardCharsets.UTF_8);
-                int length = out.length;
+            byte[] out = body.getBytes(UTF_8);
+            int length = out.length;
 
-                http.setFixedLengthStreamingMode(length);
-                http.setRequestProperty("Content-Type",
-                        "application/json; charset=UTF-8");
-                http.connect();
-                try (OutputStream os = http.getOutputStream()) {
-                    os.write(out);
-                }
-            } else {
-                HttpsURLConnection https = (HttpsURLConnection) con;
-                https.setRequestMethod("POST");
-                https.setDoOutput(true);
-
-                byte[] out = body.getBytes(StandardCharsets.UTF_8);
-                int length = out.length;
-
-                https.setFixedLengthStreamingMode(length);
-                https.setRequestProperty("Content-Type",
-                        "application/json; charset=UTF-8");
-                https.connect();
-                try (OutputStream os = https.getOutputStream()) {
-                    os.write(out);
-                }
+            http.setFixedLengthStreamingMode(length);
+            http.setRequestProperty("Content-Type",
+                    "application/json; charset=UTF-8");
+            http.connect();
+            try (OutputStream os = http.getOutputStream()) {
+                os.write(out);
             }
+
         } else {
             throw new Exception(
                     "Trace {} not sent. url, component or execid are null");
@@ -170,6 +153,14 @@ public class MonitoringManager {
         int randomNum = rand.nextInt((max - min) + 1) + min;
 
         return randomNum;
+    }
+
+    @Override
+    public String toString() {
+        return "MonitoringManager [endpoint=" + endpoint + ", withSSL="
+                + withSSL + ", execid=" + execid + ", containerName="
+                + containerName + ", component=" + component + ", url=" + url
+                + "]";
     }
 
 }
