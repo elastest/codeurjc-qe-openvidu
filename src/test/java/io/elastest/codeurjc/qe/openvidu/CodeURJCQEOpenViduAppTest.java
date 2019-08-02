@@ -48,7 +48,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             monitoringManager.sendAtomicMetric("participants", "uds",
                     CURRENT_SESSIONS * USERS_BY_SESSION + "", "openvidu");
         } catch (Exception e) {
-            logger.error("Cannot send metric nº of participants");
+            logger.error("Cannot send metric nº of participants: {}",
+                    e.getMessage());
         }
 
         final List<Runnable> browserThreads = new ArrayList<>();
