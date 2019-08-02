@@ -168,6 +168,7 @@ public class BaseTest {
         }
 
         monitoringManager = new MonitoringManager();
+        logger.info("Configured new Monitoring Manager: {}", monitoringManager);
     }
 
     @BeforeEach
