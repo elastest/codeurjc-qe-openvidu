@@ -162,8 +162,14 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             if (browserVersion != null) {
                 capabilities.setVersion(browserVersion);
             }
-
-            driver = new RemoteWebDriver(new URL(EUS_URL), capabilities);
+            // Create browser session
+            try {
+                driver = new RemoteWebDriver(new URL(EUS_URL), capabilities);
+            } catch (SessionNotCreatedException e) {
+                String msg = "Error on create new RemoteWebDriver (SessionNotCreatedException) => "
+                        + e.getMessage();
+                throw new SessionNotCreatedException(msg);
+            }
         }
         BrowserClient browserClient = new BrowserClient(driver, userId,
                 CURRENT_SESSIONS);
