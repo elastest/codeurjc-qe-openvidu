@@ -37,6 +37,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         logger.info("Test finished!");
     }
 
+    // Recursive method
     public void startBrowsers(TestInfo info) throws Exception {
         CURRENT_SESSIONS++;
         logger.info("");
@@ -88,9 +89,9 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             this.startBrowsers(info);
         } else {
             logger.info("Maximum sessions reached: {}", MAX_SESSIONS);
+            browserInitializationTaskExecutor.shutdown();
         }
 
-        browserInitializationTaskExecutor.shutdown();
         try {
             browserInitializationTaskExecutor.awaitTermination(5,
                     TimeUnit.MINUTES);

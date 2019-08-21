@@ -7,7 +7,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Random;
 
 import org.slf4j.Logger;
 
