@@ -74,20 +74,28 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
             browserInitializationTaskExecutor.execute(r);
         }
 
+        // Wait for all browsers of session ready
+        try {
+            logger.info("Waiting for all browsers of session {} are ready",
+                    CURRENT_SESSIONS);
+            waitForSessionReadyLatch.await();
+        } catch (AbortedException e) {
+            logger.error("Some browser does not have a stable session: {}",
+                    e.getMessage());
+            Assertions.fail("Session did not reach stable status in timeout: "
+                    + e.getMessage());
+            return;
+        }
+
+        logger.info("All browsers of session {} are now ready!",
+                CURRENT_SESSIONS);
+
         if (CURRENT_SESSIONS < MAX_SESSIONS) {
-            try {
-                waitForSessionReadyLatch.await();
-            } catch (AbortedException e) {
-                logger.error("Some browser does not have a stable session: {}",
-                        e.getMessage());
-                Assertions
-                        .fail("Session did not reach stable status in timeout: "
-                                + e.getMessage());
-                return;
-            }
+            logger.info("CURRENT_SESSIONS ({}) < MAX_SESSIONS ({})",
+                    CURRENT_SESSIONS, MAX_SESSIONS);
             // Start new session
             this.startBrowsers(info);
-        } else {
+        } else { // Last session
             logger.info("Maximum sessions reached: {}", MAX_SESSIONS);
             browserInitializationTaskExecutor.shutdown();
         }
@@ -178,8 +186,13 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         } catch (TimeoutException | NullPointerException e) {
             String msg = "Error on waiting for events on user " + userId
                     + " session " + CURRENT_SESSIONS + ": " + e.getMessage();
-            logger.error(msg);
-            throw e;
+            if (e instanceof TimeoutException) {
+                throw new TimeoutException(msg);
+            } else if (e instanceof NullPointerException) {
+                throw new NullPointerException(msg);
+            } else {
+                throw e;
+            }
         }
     }
 
