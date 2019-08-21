@@ -93,6 +93,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         }
 
         try {
+            logger.info("Await termination. ( session {} )", CURRENT_SESSIONS);
             browserInitializationTaskExecutor.awaitTermination(5,
                     TimeUnit.MINUTES);
         } catch (InterruptedException e) {
