@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.openqa.selenium.SessionNotCreatedException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -60,8 +61,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 try {
                     this.startBrowser(info, userId);
                     waitForSessionReadyLatch.countDown();
-                } catch (TimeoutException | IOException
-                        | NullPointerException e) {
+                } catch (TimeoutException | IOException | NullPointerException
+                        | SessionNotCreatedException e) {
                     logger.error(
                             "Error on start browser of user {} at session {}: {}",
                             userId, CURRENT_SESSIONS, e.getMessage());
@@ -101,7 +102,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
         }
 
         try {
-            logger.info("Await termination. ( session {} )", CURRENT_SESSIONS);
+            logger.info("Await termination");
             browserInitializationTaskExecutor.awaitTermination(5,
                     TimeUnit.MINUTES);
         } catch (InterruptedException e) {
@@ -115,7 +116,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
     @SuppressWarnings("unchecked")
     public void startBrowser(TestInfo info, String userId)
-            throws TimeoutException, IOException {
+            throws TimeoutException, IOException, SessionNotCreatedException {
         logger.info("Starting browser for user {} and session {}", userId,
                 CURRENT_SESSIONS);
 
