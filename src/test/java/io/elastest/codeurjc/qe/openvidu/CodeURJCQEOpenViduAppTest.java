@@ -61,8 +61,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 try {
                     this.startBrowser(info, userId);
                     waitForSessionReadyLatch.countDown();
-                } catch (TimeoutException | IOException
-                        | NullPointerException e) {
+                } catch (TimeoutException | IOException | NullPointerException
+                        | SessionNotCreatedException e) {
                     logger.error(
                             "Error on start browser of user {} at session {}: {}",
                             userId, CURRENT_SESSIONS, e.getMessage());
@@ -163,13 +163,13 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                 capabilities.setVersion(browserVersion);
             }
             // Create browser session
-//            try {
+            try {
                 driver = new RemoteWebDriver(new URL(EUS_URL), capabilities);
-//            } catch (SessionNotCreatedException e) {
-//                String msg = "Error on create new RemoteWebDriver (SessionNotCreatedException) => "
-//                        + e.getMessage();
-//                throw new SessionNotCreatedException(msg);
-//            }
+            } catch (SessionNotCreatedException e) {
+                String msg = "Error on create new RemoteWebDriver (SessionNotCreatedException) => "
+                        + e.getMessage();
+                throw new SessionNotCreatedException(msg);
+            }
         }
         BrowserClient browserClient = new BrowserClient(driver, userId,
                 CURRENT_SESSIONS);
