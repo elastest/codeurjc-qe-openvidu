@@ -55,7 +55,7 @@ public class CountDownLatchWithException {
 
         if (errorMessages != null && errorMessages.size() > 0) {
             if (errorMessages.size() == 1) {
-                return errorMessages.get(0);
+                return "Aborted by error => " + errorMessages.get(0);
             } else {
                 errorMessage = "Aborted by multiple errors => "
                         + errorMessages.toString();
