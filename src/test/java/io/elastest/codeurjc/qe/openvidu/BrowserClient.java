@@ -4,6 +4,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -52,12 +53,12 @@ public class BrowserClient {
         return driver;
     }
 
-    public void startEventPolling() {
+    public void startEventPolling(boolean processEvents, boolean processStats) {
         logger.info("Starting event polling in user {} session {}", userId,
                 session);
         this.pollingThread = new Thread(() -> {
             while (!this.stopped.get()) {
-                this.getBrowserEvents();
+                this.getBrowserEvents(processEvents, processStats);
                 try {
                     Thread.sleep(BaseTest.BROWSER_POLL_INTERVAL);
                 } catch (InterruptedException e) {
@@ -109,7 +110,7 @@ public class BrowserClient {
         }
     }
 
-    public void getBrowserEvents() {
+    public void getBrowserEvents(boolean processEvents, boolean processStats) {
         String eventsRaw = null;
         try {
             eventsRaw = (String) ((JavascriptExecutor) driver)
@@ -128,20 +129,54 @@ public class BrowserClient {
             return;
         }
 
-        JsonArray events = eventsAndStats.get("events").getAsJsonArray();
-        for (JsonElement ev : events) {
-            JsonObject event = ev.getAsJsonObject();
-            String eventName = event.get("event").getAsString();
-            logger.info("New event received in user {} of session {}: {}",
-                    userId, session, event);
-            this.eventQueue.add(event);
-            getNumEvents(eventName).incrementAndGet();
+        // EVENTS
+        if (processEvents) {
+            JsonArray events = eventsAndStats.get("events").getAsJsonArray();
+            for (JsonElement ev : events) {
+                JsonObject event = ev.getAsJsonObject();
+                String eventName = event.get("event").getAsString();
+                logger.info("New event received in user {} of session {}: {}",
+                        userId, session, event);
+                this.eventQueue.add(event);
+                getNumEvents(eventName).incrementAndGet();
 
-            if (this.eventCountdowns.get(eventName) != null) {
-                doCountDown(eventName);
+                if (this.eventCountdowns.get(eventName) != null) {
+                    doCountDown(eventName);
+                }
             }
         }
 
+        // STATS
+        if (processStats) {
+            JsonObject stats = eventsAndStats.get("stats").getAsJsonObject();
+            if (stats != null) {
+                for (Entry<String, JsonElement> user : stats.entrySet()) {
+                    JsonArray userStats = (JsonArray) user.getValue();
+                    if (userStats != null) {
+                        for (JsonElement userStatsElement : userStats) {
+                            if (userStatsElement != null) {
+                                JsonObject userStatsObj = (JsonObject) userStatsElement;
+                                for (Entry<String, JsonElement> userSingleStat : userStatsObj
+                                        .entrySet()) {
+                                    if (userSingleStat != null && ("jitter"
+                                            .equals(userSingleStat.getKey())
+                                            || "delay".equals(
+                                                    userSingleStat.getKey()
+
+                                            ))) {
+                                        logger.info("User '{}' Stat: {} = {}",
+                                                userId, userSingleStat.getKey(),
+                                                userSingleStat.getValue());
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+        }
     }
 
     private AtomicInteger getNumEvents(String eventName) {

@@ -183,7 +183,7 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
                         + "&secret=" + OPENVIDU_SECRET + "&sessionId="
                         + CURRENT_SESSIONS + "&userId=" + userId);
 
-        browserClient.startEventPolling();
+        browserClient.startEventPolling(true, false);
 
         try {
             browserClient.waitForEvent("connectionCreated", USERS_BY_SESSION);
