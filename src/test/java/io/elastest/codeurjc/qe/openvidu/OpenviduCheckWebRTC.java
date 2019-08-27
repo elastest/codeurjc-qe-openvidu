@@ -21,12 +21,22 @@ public class OpenviduCheckWebRTC extends BaseTest {
     @Test
     public void printJitterAndDelay(TestInfo info)
             throws SessionNotCreatedException, TimeoutException, IOException {
-
         for (int i = 0; i < USERS_BY_SESSION; i++) {
             startBrowser(info, "user-" + i + 1);
-            // TODO end condition
         }
 
+        long endWaitTime = System.currentTimeMillis() + 60000; // 1 Min
+
+        boolean toMuchDelayOrJitter = false;
+
+        while (System.currentTimeMillis() < endWaitTime
+                && !toMuchDelayOrJitter) {
+
+        }
+
+        // browserClient.startEventPolling(false, true);
+
+        // TODO end condition
     }
 
     @SuppressWarnings("unchecked")
@@ -98,7 +108,6 @@ public class OpenviduCheckWebRTC extends BaseTest {
                         + "&secret=" + OPENVIDU_SECRET + "&sessionId="
                         + SESSION_ID + "&userId=" + userId);
 
-        browserClient.startEventPolling(false, true);
     }
 
 }

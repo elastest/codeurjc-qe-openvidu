@@ -110,20 +110,30 @@ public class BrowserClient {
         }
     }
 
+    public JsonObject getBrowserEventsAndStatsObject() throws Exception {
+        String eventsRaw = (String) ((JavascriptExecutor) driver)
+                .executeScript("window.collectEventsAndStats();"
+                        + "var result = JSON.stringify(window.openviduLoadTest);"
+                        + "window.resetEventsAndStats();" + "return result;");
+        return jsonParser.parse(eventsRaw).getAsJsonObject();
+
+    }
+
+    public JsonArray getEventsFromObject(JsonObject eventsAndStats) {
+        return eventsAndStats.get("events").getAsJsonArray();
+    }
+
+    public JsonObject getStatsFromObject(JsonObject eventsAndStats) {
+        return eventsAndStats.get("stats").getAsJsonObject();
+    }
+
     public void getBrowserEvents(boolean processEvents, boolean processStats) {
-        String eventsRaw = null;
+        JsonObject eventsAndStats = null;
         try {
-            eventsRaw = (String) ((JavascriptExecutor) driver)
-                    .executeScript("window.collectEventsAndStats();"
-                            + "var result = JSON.stringify(window.openviduLoadTest);"
-                            + "window.resetEventsAndStats();"
-                            + "return result;");
+            eventsAndStats = getBrowserEventsAndStatsObject();
         } catch (Exception e) {
             return;
         }
-
-        JsonObject eventsAndStats = jsonParser.parse(eventsRaw)
-                .getAsJsonObject();
 
         if (eventsAndStats == null || eventsAndStats.isJsonNull()) {
             return;
@@ -131,7 +141,7 @@ public class BrowserClient {
 
         // EVENTS
         if (processEvents) {
-            JsonArray events = eventsAndStats.get("events").getAsJsonArray();
+            JsonArray events = getEventsFromObject(eventsAndStats);
             for (JsonElement ev : events) {
                 JsonObject event = ev.getAsJsonObject();
                 String eventName = event.get("event").getAsString();
@@ -147,8 +157,10 @@ public class BrowserClient {
         }
 
         // STATS
+        logger.info("Stats from user '{}' and session '{}': {}", userId,
+                session, getStatsFromObject(eventsAndStats));
         if (processStats) {
-            JsonObject stats = eventsAndStats.get("stats").getAsJsonObject();
+            JsonObject stats = getStatsFromObject(eventsAndStats);
             if (stats != null) {
                 for (Entry<String, JsonElement> user : stats.entrySet()) {
                     JsonArray userStats = (JsonArray) user.getValue();
