@@ -49,6 +49,38 @@ public class BrowserClient {
         this.eventCountdowns = new ConcurrentHashMap<>();
     }
 
+    public Thread getPollingThread() {
+        return pollingThread;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public int getSession() {
+        return session;
+    }
+
+    public AtomicBoolean getStopped() {
+        return stopped;
+    }
+
+    public Queue<JsonObject> getEventQueue() {
+        return eventQueue;
+    }
+
+    public Map<String, AtomicInteger> getNumEvents() {
+        return numEvents;
+    }
+
+    public Map<String, CountDownLatch> getEventCountdowns() {
+        return eventCountdowns;
+    }
+
+    public JsonParser getJsonParser() {
+        return jsonParser;
+    }
+
     public WebDriver getDriver() {
         return driver;
     }

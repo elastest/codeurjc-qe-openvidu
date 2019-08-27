@@ -15,6 +15,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
 
 public class OpenviduCheckWebRTC extends BaseTest {
 
@@ -31,12 +32,18 @@ public class OpenviduCheckWebRTC extends BaseTest {
 
         while (System.currentTimeMillis() < endWaitTime
                 && !toMuchDelayOrJitter) {
-
+            for (BrowserClient browserClient : browserClientList) {
+                try {
+                    JsonObject eventsAndStats = browserClient
+                            .getBrowserEventsAndStatsObject();
+                    logger.info("Stats received from user {}: {}",
+                            browserClient.getUserId(),
+                            browserClient.getStatsFromObject(eventsAndStats));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
-
-        // browserClient.startEventPolling(false, true);
-
-        // TODO end condition
     }
 
     @SuppressWarnings("unchecked")
