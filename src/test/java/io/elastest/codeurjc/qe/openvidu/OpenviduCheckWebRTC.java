@@ -80,14 +80,11 @@ public class OpenviduCheckWebRTC extends BaseTest {
             throws TimeoutException, IOException {
         waitForSessionReadyLatch = new CountDownLatchWithException(
                 USERS_BY_SESSION);
-        for (int i = 0; i < USERS_BY_SESSION; i++) {
-            startBrowser(info, "user-" + (i + 1));
-        }
 
         final List<Runnable> browserThreads = new ArrayList<>();
         // Start N browsers
         for (int i = 0; i < USERS_BY_SESSION; i++) {
-            final String userId = "user-" + i + 1;
+            final String userId = "user-" + (i + 1);
             browserThreads.add(() -> {
                 try {
                     this.startBrowser(info, userId);
