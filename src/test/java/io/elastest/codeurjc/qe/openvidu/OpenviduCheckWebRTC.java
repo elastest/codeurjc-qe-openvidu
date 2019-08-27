@@ -2,9 +2,15 @@ package io.elastest.codeurjc.qe.openvidu;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.openqa.selenium.SessionNotCreatedException;
@@ -17,17 +23,20 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 
+import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
+
 public class OpenviduCheckWebRTC extends BaseTest {
+
+    private static CountDownLatchWithException waitForSessionReadyLatch;
+    public static ExecutorService browserInitializationTaskExecutor = Executors
+            .newCachedThreadPool();
 
     @Test
     public void printJitterAndDelay(TestInfo info)
             throws SessionNotCreatedException, TimeoutException, IOException {
-        for (int i = 0; i < USERS_BY_SESSION; i++) {
-            startBrowser(info, "user-" + i + 1);
-        }
+        startBrowsers(info);
 
         long endWaitTime = System.currentTimeMillis() + 60000; // 1 Min
-
         boolean toMuchDelayOrJitter = false;
 
         while (System.currentTimeMillis() < endWaitTime
@@ -44,6 +53,63 @@ public class OpenviduCheckWebRTC extends BaseTest {
                 }
             }
         }
+
+        logger.info("End");
+        browserInitializationTaskExecutor.shutdown();
+
+        try {
+            logger.info("Await termination");
+            browserInitializationTaskExecutor.awaitTermination(5,
+                    TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            logger.error(
+                    "Browsers threads could not be finished after 5 minutes");
+            Assertions.fail(e.getMessage());
+            return;
+        }
+    }
+
+    private void startBrowsers(TestInfo info)
+            throws TimeoutException, IOException {
+        waitForSessionReadyLatch = new CountDownLatchWithException(
+                USERS_BY_SESSION);
+        for (int i = 0; i < USERS_BY_SESSION; i++) {
+            startBrowser(info, "user-" + i + 1);
+        }
+
+        final List<Runnable> browserThreads = new ArrayList<>();
+        // Start N browsers
+        for (int i = 0; i < USERS_BY_SESSION; i++) {
+            final String userId = "user-" + i + 1;
+            browserThreads.add(() -> {
+                try {
+                    this.startBrowser(info, userId);
+                    waitForSessionReadyLatch.countDown();
+                } catch (TimeoutException | IOException | NullPointerException
+                        | SessionNotCreatedException e) {
+                    logger.error("Error on start browser of user {}: {}",
+                            userId, e.getMessage());
+                    waitForSessionReadyLatch.abort(e.getMessage());
+                }
+            });
+        }
+
+        for (Runnable r : browserThreads) {
+            browserInitializationTaskExecutor.execute(r);
+        }
+
+        try {
+            logger.info("Waiting for all browsers  are ready");
+            waitForSessionReadyLatch.await();
+        } catch (AbortedException e) {
+            logger.error("Some browser does not have a stable session: {}",
+                    e.getMessage());
+            Assertions.fail("Session did not reach stable status in timeout: "
+                    + e.getMessage());
+            return;
+        }
+
+        logger.info("All browsers of session {} are now ready!");
     }
 
     @SuppressWarnings("unchecked")
