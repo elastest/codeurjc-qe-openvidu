@@ -189,8 +189,6 @@ public class BrowserClient {
         }
 
         // STATS
-        logger.info("Stats from user '{}' and session '{}': {}", userId,
-                session, getStatsFromObject(eventsAndStats));
         if (processStats) {
             JsonObject stats = getStatsFromObject(eventsAndStats);
             if (stats != null) {
