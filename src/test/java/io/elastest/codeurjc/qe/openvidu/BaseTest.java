@@ -234,4 +234,11 @@ public class BaseTest {
         in.close();
         return stringbuilder.toString();
     }
+
+    public static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+        }
+    }
 }

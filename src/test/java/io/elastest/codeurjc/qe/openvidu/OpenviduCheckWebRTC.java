@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
@@ -31,6 +34,12 @@ public class OpenviduCheckWebRTC extends BaseTest {
     public static ExecutorService browserInitializationTaskExecutor = Executors
             .newCachedThreadPool();
 
+    private double currentJitterAverage = 0;
+    private List<Integer> jitterList;
+    private double currentDelayAverage = 0;
+    private List<Integer> delayList;
+    private int STATS_LIMIT = 150;
+
     @Test
     public void printJitterAndDelay(TestInfo info)
             throws SessionNotCreatedException, TimeoutException, IOException {
@@ -40,25 +49,54 @@ public class OpenviduCheckWebRTC extends BaseTest {
         long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
         boolean toMuchDelayOrJitter = false;
 
+        String statsLimit = System.getenv("STATS_LIMIT");
+
+        if (statsLimit != null) {
+            STATS_LIMIT = Integer.valueOf(statsLimit);
+        }
+
         logger.info("Printing stats while {}s", WAIT_TIME);
         while (System.currentTimeMillis() < endWaitTime
                 && !toMuchDelayOrJitter) {
+
             for (BrowserClient browserClient : browserClientList) {
+                currentJitterAverage = 0;
+                jitterList = new ArrayList<Integer>();
+                currentDelayAverage = 0;
+                delayList = new ArrayList<Integer>();
                 try {
-                    JsonObject eventsAndStats = browserClient
-                            .getBrowserEventsAndStatsObject();
-                    logger.info("Stats received from user {}: {}",
-                            browserClient.getUserId(),
-                            browserClient.getStatsFromObject(eventsAndStats));
+                    extractJitterAndDelay(browserClient);
+
+                    for (Integer jitter : jitterList) {
+                        currentJitterAverage += jitter;
+                    }
+
+                    currentJitterAverage = currentJitterAverage
+                            / jitterList.size();
+
+                    for (Integer delay : delayList) {
+                        currentDelayAverage += delay;
+                    }
+                    currentDelayAverage = currentDelayAverage
+                            / delayList.size();
+
+                    if (currentJitterAverage > STATS_LIMIT
+                            || currentDelayAverage > STATS_LIMIT) {
+                        toMuchDelayOrJitter = true;
+                        break;
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+            sleep(1000);
+        }
 
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
+        if (toMuchDelayOrJitter) {
+            Assertions.fail("Delay (" + currentDelayAverage
+                    + ") or/and Jitter (" + currentJitterAverage
+                    + "), are greather than " + STATS_LIMIT);
         }
 
         logger.info("End");
@@ -74,6 +112,66 @@ public class OpenviduCheckWebRTC extends BaseTest {
             Assertions.fail(e.getMessage());
             return;
         }
+    }
+
+    private void extractJitterAndDelay(BrowserClient browserClient)
+            throws Exception {
+        JsonObject eventsAndStats = browserClient
+                .getBrowserEventsAndStatsObject();
+        JsonObject stats = browserClient.getStatsFromObject(eventsAndStats);
+
+        String currentUserId = browserClient.getUserId();
+
+        logger.info("Stats received from user {}: {}",
+                browserClient.getUserId(), stats);
+        if (stats != null) {
+            // Received stats from current user contains stats from all users
+            // For each user in stats
+            for (Entry<String, JsonElement> user : stats.entrySet()) {
+                logger.info("Stats from user {}. User stats: {}", currentUserId,
+                        user.getKey());
+                JsonArray userStats = (JsonArray) user.getValue();
+                if (userStats != null) {
+                    // For each user stats
+                    for (JsonElement userStatsElement : userStats) {
+                        if (userStatsElement != null) {
+                            JsonObject userStatsObj = (JsonObject) userStatsElement;
+                            for (Entry<String, JsonElement> userSingleStat : userStatsObj
+                                    .entrySet()) {
+                                if (userSingleStat != null) {
+                                    String statName = userSingleStat.getKey();
+                                    if ("jitter".equals(statName)) {
+                                        Integer jitter = userSingleStat
+                                                .getValue().getAsInt();
+                                        logger.info(
+                                                "Current User '{}', User:{}, Jitter = {}",
+                                                currentUserId, user.getKey(),
+                                                jitter);
+
+                                        synchronized (jitterList) {
+                                            jitterList.add(jitter);
+                                        }
+
+                                    } else if ("delay".equals(statName)) {
+                                        Integer delay = userSingleStat
+                                                .getValue().getAsInt();
+                                        logger.info(
+                                                "Current User '{}', User:{}, Delay = {}",
+                                                currentUserId, user.getKey(),
+                                                delay);
+                                        synchronized (delayList) {
+                                            delayList.add(delay);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
     }
 
     private void startBrowsers(TestInfo info)
