@@ -36,9 +36,11 @@ public class OpenviduCheckWebRTC extends BaseTest {
             throws SessionNotCreatedException, TimeoutException, IOException {
         startBrowsers(info);
 
-        long endWaitTime = System.currentTimeMillis() + 60000; // 1 Min
+        final int WAIT_TIME = 60;
+        long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
         boolean toMuchDelayOrJitter = false;
 
+        logger.info("Printint stats while {}s", WAIT_TIME);
         while (System.currentTimeMillis() < endWaitTime
                 && !toMuchDelayOrJitter) {
             for (BrowserClient browserClient : browserClientList) {
@@ -51,6 +53,11 @@ public class OpenviduCheckWebRTC extends BaseTest {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
             }
         }
 
