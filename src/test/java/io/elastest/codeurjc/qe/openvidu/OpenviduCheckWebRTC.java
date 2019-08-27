@@ -40,7 +40,7 @@ public class OpenviduCheckWebRTC extends BaseTest {
         long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
         boolean toMuchDelayOrJitter = false;
 
-        logger.info("Printint stats while {}s", WAIT_TIME);
+        logger.info("Printing stats while {}s", WAIT_TIME);
         while (System.currentTimeMillis() < endWaitTime
                 && !toMuchDelayOrJitter) {
             for (BrowserClient browserClient : browserClientList) {
@@ -81,7 +81,7 @@ public class OpenviduCheckWebRTC extends BaseTest {
         waitForSessionReadyLatch = new CountDownLatchWithException(
                 USERS_BY_SESSION);
         for (int i = 0; i < USERS_BY_SESSION; i++) {
-            startBrowser(info, "user-" + i + 1);
+            startBrowser(info, "user-" + (i + 1));
         }
 
         final List<Runnable> browserThreads = new ArrayList<>();
