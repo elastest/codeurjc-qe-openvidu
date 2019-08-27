@@ -190,6 +190,7 @@ public class BaseTest {
                 if (browserClient != null) {
                     browserThreads.add(() -> {
                         browserClient.dispose();
+                        waitForBrowsersEndLatch.countDown();
                     });
                 }
             }
