@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -20,6 +23,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class BaseTest {
@@ -177,12 +181,34 @@ public class BaseTest {
     @AfterEach
     public void teardown(TestInfo info) {
         if (browserClientList != null) {
+            ExecutorService browserDisposeTaskExecutor = Executors
+                    .newCachedThreadPool();
+            CountDownLatchWithException waitForBrowsersEndLatch = new CountDownLatchWithException(
+                    browserClientList.size());
+            List<Runnable> browserThreads = new ArrayList<>();
             for (BrowserClient browserClient : browserClientList) {
                 if (browserClient != null) {
-                    browserClient.dispose();
+                    browserThreads.add(() -> {
+                        browserClient.dispose();
+                    });
                 }
             }
 
+            for (Runnable r : browserThreads) {
+                browserDisposeTaskExecutor.execute(r);
+            }
+
+            try {
+                waitForBrowsersEndLatch.await();
+            } catch (AbortedException e1) {
+            }
+
+            browserDisposeTaskExecutor.shutdown();
+            try {
+                browserDisposeTaskExecutor.awaitTermination(5,
+                        TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+            }
         }
 
         String testName = info.getTestMethod().get().getName();
