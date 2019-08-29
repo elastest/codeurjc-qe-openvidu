@@ -122,20 +122,18 @@ public class WebRtcBaseTest {
         /* *************************************** */
 
         // Aws Config
-        String region = System.getenv("AWS_REGION");
         String secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY");
         String accessKeyId = System.getenv("AWS_ACCESS_KEY_ID");
         String sshPrivateKey = System.getenv("AWS_SSH_PRIVATE_KEY");
 
         // Instances config
-        String instanceType = System.getenv("AWS_INSTANCE_TYPE");
         String keyName = System.getenv("AWS_KEY_NAME");
         String securityGroups = System.getenv("AWS_SECURITY_GROUPS");
 
         JsonParser parser = new JsonParser();
         awsConfig = new JsonObject();
 
-        awsConfig.addProperty("region", region);
+        awsConfig.addProperty("region", AWS_REGION);
         awsConfig.addProperty("secretAccessKey", secretAccessKey);
         awsConfig.addProperty("accessKeyId", accessKeyId);
         awsConfig.addProperty("sshUser", AWS_SSH_USER);
@@ -146,7 +144,7 @@ public class WebRtcBaseTest {
 
         JsonObject awsInstancesConfig = new JsonObject();
         awsInstancesConfig.addProperty("amiId", AWS_AMI_ID);
-        awsInstancesConfig.addProperty("instanceType", instanceType);
+        awsInstancesConfig.addProperty("instanceType", AWS_INSTANCE_TYPE);
         awsInstancesConfig.addProperty("keyName", keyName);
 
         awsInstancesConfig.addProperty("numInstances", AWS_NUM_INSTANCES);
