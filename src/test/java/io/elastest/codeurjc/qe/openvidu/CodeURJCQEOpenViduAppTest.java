@@ -141,8 +141,8 @@ public class CodeURJCQEOpenViduAppTest extends BaseTest {
 
             capabilities.setCapability("testName",
                     testName + "_" + userId.replaceAll("-", "_"));
+            
             // AWS capabilities for browsers
-
             ObjectMapper mapper = new ObjectMapper();
             Map<String, String> awsConfigMap = mapper
                     .readValue(awsConfig.toString(), Map.class);

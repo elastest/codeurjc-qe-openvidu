@@ -1,4 +1,4 @@
-package io.elastest.codeurjc.qe.openvidu;
+package io.elastest.codeurjc.qe.openvidu.webrtc;
 
 import java.io.IOException;
 import java.net.URL;
@@ -26,9 +26,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import io.elastest.codeurjc.qe.openvidu.BrowserClient;
+import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
 
-public class OpenviduCheckWebRTC extends BaseTest {
+public class OpenviduCheckWebRTC
+        extends io.elastest.codeurjc.qe.openvidu.webrtc.WebRtcBaseTest {
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
