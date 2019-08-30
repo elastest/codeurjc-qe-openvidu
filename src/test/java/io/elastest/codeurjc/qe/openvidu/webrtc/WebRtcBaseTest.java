@@ -88,13 +88,18 @@ public class WebRtcBaseTest {
         /* ******** Openvidu Sut init ******** */
         /* *********************************** */
 
-        String sutProtocolAndHost = System.getenv("ET_SUT_PROTOCOL_AND_HOST");
+        String sutHost = System.getenv("ET_SUT_HOST");
         String sutPort = System.getenv("ET_SUT_PORT");
+        String sutProtocol = System.getenv("ET_SUT_PROTOCOL");
 
-        if (sutProtocolAndHost != null) {
+        if (sutHost != null) {
             sutPort = sutPort != null && !"".equals(sutPort) ? sutPort : "4443";
-            OPENVIDU_SUT_URL = sutProtocolAndHost + ":" + sutPort;
-            OPENVIDU_WEBAPP_URL = sutProtocolAndHost;
+            sutProtocol = sutProtocol != null && !"".equals(sutProtocol)
+                    ? sutProtocol
+                    : "https";
+
+            OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
+            OPENVIDU_WEBAPP_URL = sutProtocol + "://" + sutHost;
         } else {
             throw new Exception("No Sut URL");
         }

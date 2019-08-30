@@ -91,8 +91,8 @@ public class BaseTest {
         String sutProtocol = System.getenv("ET_SUT_PROTOCOL");
 
         if (sutHost != null) {
-            sutPort = sutPort != null ? sutPort : "8080";
-            sutProtocol = sutProtocol != null ? sutProtocol : "http";
+            sutPort = sutPort != null ? sutPort : "4443";
+            sutProtocol = sutProtocol != null ? sutProtocol : "https";
 
             OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
             OPENVIDU_WEBAPP_URL = sutProtocol + "://" + sutHost;
