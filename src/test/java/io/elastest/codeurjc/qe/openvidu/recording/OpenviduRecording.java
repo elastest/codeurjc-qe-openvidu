@@ -27,8 +27,7 @@ import io.elastest.codeurjc.qe.openvidu.BrowserClient;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
 
-public class OpenviduRecording
-        extends io.elastest.codeurjc.qe.openvidu.webrtc.WebRtcBaseTest {
+public class OpenviduRecording extends RecordingBaseTest {
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors

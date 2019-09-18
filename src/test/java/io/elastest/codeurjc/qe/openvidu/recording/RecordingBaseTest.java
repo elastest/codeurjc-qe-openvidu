@@ -65,6 +65,7 @@ public class RecordingBaseTest {
         String openviduSecret = System.getenv("OPENVIDU_SECRET");
         String secondsOfWait = System.getenv("SECONDS_OF_WAIT");
         String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
+        String usersSession = System.getenv("USERS_BY_SESSION");
 
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
@@ -75,6 +76,10 @@ public class RecordingBaseTest {
 
         if (browserPollInterval != null) {
             BROWSER_POLL_INTERVAL = Integer.parseInt(browserPollInterval);
+        }
+
+        if (usersSession != null) {
+            USERS_BY_SESSION = Integer.parseInt(usersSession);
         }
 
     }
