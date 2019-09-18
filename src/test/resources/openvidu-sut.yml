@@ -102,7 +102,7 @@ Resources:
                 set -eu -o pipefail
                 WORKDIR=$(mktemp -d)
                 pushd $WORKDIR
-                git clone https://github.com/OpenVidu/openvidu-loadtest.git
+                git clone https://github.com/elastest/openvidu-loadtest.git
                 cp -rav openvidu-loadtest/webapp/* /var/www/html
                 popd
               mode: "000755"

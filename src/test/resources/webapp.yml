@@ -113,7 +113,7 @@ Resources:
               content: |
                 #!/bin/bash
                 rm -rf /var/www/html/*
-                git clone https://github.com/OpenVidu/openvidu-loadtest.git /var/www/html/openvidu-loadtest
+                git clone https://github.com/elastest/openvidu-loadtest.git /var/www/html/openvidu-loadtest
                 mv /var/www/html/openvidu-loadtest/webapp/* /var/www/html
                 rm -rf /var/www/html/openvidu-loadtest
               mode: "000755"
