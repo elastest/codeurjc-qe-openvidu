@@ -3,8 +3,6 @@ package io.elastest.codeurjc.qe.openvidu;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -256,60 +254,34 @@ public class BrowserClient {
         }
     }
 
-    public JsonArray getStreams() throws Exception {
+    public JsonArray getSubscriberStreams() throws Exception {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
-                "var result = window.session.streamManagers.toString();"
+                "var result = JSON.stringify(window.subscriberStreamIds);"
                         + "return result;");
         logger.info("Streams string: {}", streams);
-        logger.info("Streams string: {}", jsonParser.parse(streams));
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
 
-    public List<JsonObject> getOnlySubscriberStreams() throws Exception {
-        JsonArray streams = getStreams();
-        return filterSubscriberStreams(streams);
-    }
-
-    public List<JsonObject> filterSubscriberStreams(JsonArray streams)
-            throws Exception {
-        List<JsonObject> subscriberStreams = new ArrayList<JsonObject>();
-        for (Object stream : streams) {
-            if (stream instanceof JsonObject) {
-                JsonObject streamObj = (JsonObject) stream;
-                if (streamObj != null && streamObj.get("remote") != null) {
-                    if ("true".equals(streamObj.get("remote").getAsString())
-                            || streamObj.get("remote").getAsBoolean()) {
-                        subscriberStreams.add(streamObj);
-                    }
-                }
-            }
-        }
-        return subscriberStreams;
-    }
-
-    public String initLocalRecorder(JsonObject stream) throws Exception {
+    public String initLocalRecorder(String streamId) throws Exception {
         String localRecorderId = (String) ((JavascriptExecutor) driver)
-                .executeScript(
-                        "var localRecorder = window.OpenVidu.prototype.initLocalRecorder("
-                                + stream + ");"
-                                + "window['localRecorder' + localRecorder.id] = localRecorder;"
-                                + "return localRecorder.id;");
+                .executeScript("var localRecorderId = initLocalRecorder("
+                        + streamId + ");" + "return localRecorderId;");
         return localRecorderId;
     }
 
     public void startRecording(String localRecorderId) throws Exception {
-        ((JavascriptExecutor) driver).executeScript(
-                "window['localRecorder' + " + localRecorderId + "].record();");
+        ((JavascriptExecutor) driver)
+                .executeScript("startRecording(" + localRecorderId + ");");
     }
 
     public void stopRecording(String localRecorderId) throws Exception {
-        ((JavascriptExecutor) driver).executeScript(
-                "window['localRecorder' + " + localRecorderId + "].stop();");
+        ((JavascriptExecutor) driver)
+                .executeScript("stopRecording(" + localRecorderId + ");");
     }
 
     public void downloadRecording(String localRecorderId) throws Exception {
-        ((JavascriptExecutor) driver).executeScript("window['localRecorder' + "
-                + localRecorderId + "].download();");
+        ((JavascriptExecutor) driver)
+                .executeScript("downloadRecording(" + localRecorderId + ");");
     }
 }

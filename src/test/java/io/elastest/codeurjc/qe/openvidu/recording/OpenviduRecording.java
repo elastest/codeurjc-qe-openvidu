@@ -21,7 +21,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 import io.elastest.codeurjc.qe.openvidu.BrowserClient;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
@@ -42,13 +43,12 @@ public class OpenviduRecording extends RecordingBaseTest {
         BrowserClient firstBrowser = browserClientList.get(0);
         List<String> localRecorderIds = new ArrayList<>();
         try {
-            List<JsonObject> subscriberStreams = firstBrowser
-                    .getOnlySubscriberStreams();
+            JsonArray subscriberStreamIds = firstBrowser.getSubscriberStreams();
             try {
-                for (JsonObject stream : subscriberStreams) {
-                    if (stream != null) {
+                for (JsonElement streamId : subscriberStreamIds) {
+                    if (streamId != null) {
                         String localRecorderId = firstBrowser
-                                .initLocalRecorder(stream);
+                                .initLocalRecorder(streamId.getAsString());
                         localRecorderIds.add(localRecorderId);
                         firstBrowser.startRecording(localRecorderId);
                     }
