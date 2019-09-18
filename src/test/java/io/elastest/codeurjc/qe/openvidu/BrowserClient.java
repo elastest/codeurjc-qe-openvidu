@@ -257,8 +257,8 @@ public class BrowserClient {
     }
 
     public JsonArray getStreams() throws Exception {
-        String streams = (String) ((JavascriptExecutor) driver).executeScript(
-                "var result = JSON.stringify(window.session.streamManagers);"
+        String streams = (String) ((JavascriptExecutor) driver)
+                .executeScript("var result = window.session.streamManagers;"
                         + "return result;");
         return jsonParser.parse(streams).getAsJsonArray();
 
