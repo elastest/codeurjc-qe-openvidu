@@ -54,6 +54,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                     }
                 }
             } catch (Exception e1) {
+                e1.printStackTrace();
                 String msg = "Error on init localRecorder or start recording: "
                         + e1.getMessage();
                 throw new Exception(msg);
@@ -73,6 +74,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                     firstBrowser.stopRecording(localRecorderId);
                     firstBrowser.downloadRecording(localRecorderId);
                 } catch (Exception e1) {
+                    e1.printStackTrace();
                     String msg = "Error on stop or download recording for localRecorder "
                             + localRecorderId + ": " + e1.getMessage();
                     throw new Exception(msg);
@@ -80,7 +82,6 @@ public class OpenviduRecording extends RecordingBaseTest {
             }
             sleep(20000);
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error(e.getMessage());
             Assertions.fail(e.getMessage());
             waitForSessionReadyLatch.abort(e.getMessage());
