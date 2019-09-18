@@ -265,23 +265,23 @@ public class BrowserClient {
 
     public String initLocalRecorder(String streamId) throws Exception {
         String localRecorderId = (String) ((JavascriptExecutor) driver)
-                .executeScript("var localRecorderId = initLocalRecorder("
-                        + streamId + ");" + "return localRecorderId;");
+                .executeScript("var localRecorderId = initLocalRecorder('"
+                        + streamId + "');" + "return localRecorderId;");
         return localRecorderId;
     }
 
     public void startRecording(String localRecorderId) throws Exception {
         ((JavascriptExecutor) driver)
-                .executeScript("startRecording(" + localRecorderId + ");");
+                .executeScript("startRecording('" + localRecorderId + "');");
     }
 
     public void stopRecording(String localRecorderId) throws Exception {
         ((JavascriptExecutor) driver)
-                .executeScript("stopRecording(" + localRecorderId + ");");
+                .executeScript("stopRecording('" + localRecorderId + "');");
     }
 
     public void downloadRecording(String localRecorderId) throws Exception {
         ((JavascriptExecutor) driver)
-                .executeScript("downloadRecording(" + localRecorderId + ");");
+                .executeScript("downloadRecording('" + localRecorderId + "');");
     }
 }
