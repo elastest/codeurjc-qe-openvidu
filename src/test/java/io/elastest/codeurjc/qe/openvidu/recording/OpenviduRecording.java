@@ -167,20 +167,24 @@ public class OpenviduRecording extends RecordingBaseTest {
 
             capabilities.setCapability("testName",
                     testName + "_" + userId.replaceAll("-", "_"));
-            // AWS capabilities for browsers
 
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, String> awsConfigMap = mapper
-                    .readValue(awsConfig.toString(), Map.class);
+            String noUseAWS = System.getProperty("noUseAWS");
+            if (noUseAWS == null || !"true".equals(noUseAWS)) {
+                // AWS capabilities for browsers
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, String> awsConfigMap = mapper
+                        .readValue(awsConfig.toString(), Map.class);
 
-            capabilities.setCapability("awsConfig", awsConfigMap);
+                capabilities.setCapability("awsConfig", awsConfigMap);
 
-            // This flag sets the video input
-            options.addArguments("--use-file-for-fake-video-capture="
-                    + "/opt/openvidu/fakevideo.y4m");
-            // This flag sets the audio input
-            options.addArguments("--use-file-for-fake-audio-capture="
-                    + "/opt/openvidu/fakeaudio.wav");
+                // This flag sets the video input
+                options.addArguments("--use-file-for-fake-video-capture="
+                        + "/opt/openvidu/fakevideo.y4m");
+                // This flag sets the audio input
+                options.addArguments("--use-file-for-fake-audio-capture="
+                        + "/opt/openvidu/fakeaudio.wav");
+            }
+
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
             capabilities.setCapability("elastestTimeout", 3600);
 

@@ -261,6 +261,7 @@ public class BrowserClient {
                 "var result = window.session.streamManagers.toString();"
                         + "return result;");
         logger.info("Streams string: {}", streams);
+        logger.info("Streams string: {}", jsonParser.parse(streams));
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
