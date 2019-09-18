@@ -214,6 +214,25 @@ public class OpenviduRecording extends RecordingBaseTest {
                         + "&secret=" + OPENVIDU_SECRET + "&sessionId="
                         + SESSION_ID + "&userId=" + userId);
 
+        browserClient.startEventPolling(true, false);
+
+        try {
+            browserClient.waitForEvent("connectionCreated", USERS_BY_SESSION);
+            browserClient.waitForEvent("accessAllowed", 1);
+            browserClient.waitForEvent("streamCreated", USERS_BY_SESSION);
+            browserClient.stopEventPolling();
+        } catch (TimeoutException | NullPointerException e) {
+            String msg = "Error on waiting for events on user " + userId
+                    + " session " + SESSION_ID + ": " + e.getMessage();
+            if (e instanceof TimeoutException) {
+                throw new TimeoutException(msg);
+            } else if (e instanceof NullPointerException) {
+                throw new NullPointerException(msg);
+            } else {
+                throw e;
+            }
+        }
+
     }
 
 }
