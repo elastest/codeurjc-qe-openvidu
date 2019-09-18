@@ -29,7 +29,7 @@ import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedExcep
 import io.elastest.codeurjc.qe.openvidu.MonitoringManager;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-public class WebRtcBaseTest {
+public class RecordingBaseTest {
     protected static final Logger logger = getLogger(lookup().lookupClass());
 
     public static int USERS_BY_SESSION = 3;

@@ -45,14 +45,19 @@ public class OpenviduRecording
         try {
             List<JsonObject> subscriberStreams = firstBrowser
                     .getOnlySubscriberStreams();
-
-            for (JsonObject stream : subscriberStreams) {
-                if (stream != null) {
-                    String localRecorderId = firstBrowser
-                            .initLocalRecorder(stream);
-                    localRecorderIds.add(localRecorderId);
-                    firstBrowser.startRecording(localRecorderId);
+            try {
+                for (JsonObject stream : subscriberStreams) {
+                    if (stream != null) {
+                        String localRecorderId = firstBrowser
+                                .initLocalRecorder(stream);
+                        localRecorderIds.add(localRecorderId);
+                        firstBrowser.startRecording(localRecorderId);
+                    }
                 }
+            } catch (Exception e1) {
+                String msg = "Error on init localRecorder or start recording: "
+                        + e1.getMessage();
+                throw new Exception(msg);
             }
 
             // seconds
@@ -71,18 +76,15 @@ public class OpenviduRecording
                 } catch (Exception e1) {
                     String msg = "Error on stop or download recording for localRecorder "
                             + localRecorderId + ": " + e1.getMessage();
-                    logger.error(msg);
-                    Assertions.fail(msg);
-                    waitForSessionReadyLatch.abort(msg);
+                    throw new Exception(msg);
                 }
             }
             sleep(20000);
         } catch (Exception e) {
-            String msg = "Error on init localRecorder or start recording: "
-                    + e.getMessage();
-            logger.error(msg);
-            Assertions.fail(msg);
-            waitForSessionReadyLatch.abort(msg);
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            Assertions.fail(e.getMessage());
+            waitForSessionReadyLatch.abort(e.getMessage());
         }
 
         logger.info("End");
