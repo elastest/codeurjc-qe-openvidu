@@ -84,6 +84,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             }
             sleep(2000);
             getDownloadedFiles(firstBrowser);
+            sleep(20000);
         } catch (Exception e) {
             logger.error(e.getMessage());
             Assertions.fail(e.getMessage());
