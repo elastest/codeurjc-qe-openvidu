@@ -19,6 +19,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.remote.SessionId;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
@@ -27,6 +28,7 @@ import com.google.gson.JsonElement;
 import io.elastest.codeurjc.qe.openvidu.BrowserClient;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
+import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class OpenviduRecording extends RecordingBaseTest {
 
@@ -80,7 +82,8 @@ public class OpenviduRecording extends RecordingBaseTest {
                     throw new Exception(msg);
                 }
             }
-            sleep(20000);
+            sleep(2000);
+            getDownloadedFiles(firstBrowser);
         } catch (Exception e) {
             logger.error(e.getMessage());
             Assertions.fail(e.getMessage());
@@ -236,4 +239,19 @@ public class OpenviduRecording extends RecordingBaseTest {
 
     }
 
+    public void getDownloadedFiles(BrowserClient browserClient)
+            throws Exception {
+        if (EUS_URL != null) {
+            RestClient restClient = new RestClient();
+
+            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
+                    .getSessionId();
+
+            String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
+            url += "/browserfile/session/" + sessionId.toString()
+                    + "//home/ubuntu/Downloads/?isDirectory=true";
+            StringBuffer response = restClient.sendGet(url);
+            logger.debug("Response: {}", response);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-package io.elastest.codeurjc.qe.openvidu;
+package io.elastest.codeurjc.qe.utils;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.nio.charset.StandardCharsets.UTF_8;

@@ -26,7 +26,7 @@ import com.google.gson.JsonParser;
 import io.elastest.codeurjc.qe.openvidu.BrowserClient;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
-import io.elastest.codeurjc.qe.openvidu.MonitoringManager;
+import io.elastest.codeurjc.qe.utils.MonitoringManager;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class RecordingBaseTest {
