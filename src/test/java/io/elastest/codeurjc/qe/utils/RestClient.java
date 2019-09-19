@@ -44,7 +44,8 @@ public class RestClient {
     }
 
     // HTTP POST request
-    public StringBuffer sendPost(String url) throws Exception {
+    public StringBuffer sendPost(String url, String urlParameters)
+            throws Exception {
         URL obj = new URL(url);
         HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
 
@@ -52,18 +53,19 @@ public class RestClient {
         con.setRequestMethod("POST");
         con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
 
-        String urlParameters = "sn=C02G8416DRJM&cn=&locale=&caller=&num=12345";
-
         // Send post request
         con.setDoOutput(true);
-        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(urlParameters);
-        wr.flush();
-        wr.close();
+
+        logger.info("Sending 'POST' request to URL : " + url);
+        if (urlParameters != null) {
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(urlParameters);
+            wr.flush();
+            wr.close();
+            logger.info("Post parameters : " + urlParameters);
+        }
 
         int responseCode = con.getResponseCode();
-        logger.info("Sending 'POST' request to URL : " + url);
-        logger.info("Post parameters : " + urlParameters);
         logger.info("Response Code : " + responseCode);
 
         BufferedReader in = new BufferedReader(
@@ -80,6 +82,58 @@ public class RestClient {
         logger.info("POST result: {}", response.toString());
 
         return response;
+    }
+
+    public StringBuffer postMultipart(String urlString,
+            String fileNameWithExt, byte[] body) {
+
+        String attachmentName = "file";
+        String attachmentFileName = fileNameWithExt;
+        String crlf = "\r\n";
+        String twoHyphens = "--";
+        String boundary = "*****";
+
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setDoOutput(true);
+            con.setRequestMethod("POST");
+
+            con.setRequestProperty("Content-Type",
+                    "multipart/form-data;boundary=" + boundary);
+            DataOutputStream request = new DataOutputStream(
+                    con.getOutputStream());
+
+            request.writeBytes(twoHyphens + boundary + crlf);
+            request.writeBytes("Content-Disposition: form-data; name=\""
+                    + attachmentName + "\";filename=\"" + attachmentFileName
+                    + "\"" + crlf);
+
+            request.writeBytes(crlf);
+            request.write(body);
+            request.writeBytes(crlf);
+            request.writeBytes(twoHyphens + boundary + twoHyphens + crlf);
+            request.flush();
+            request.close();
+
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // print result
+            logger.info("POST result: {}", response.toString());
+
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

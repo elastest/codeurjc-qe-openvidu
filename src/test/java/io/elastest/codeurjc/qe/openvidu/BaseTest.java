@@ -41,6 +41,7 @@ public class BaseTest {
     public static int BROWSER_POLL_INTERVAL = 1000;
 
     protected static String EUS_URL;
+    protected static String ET_ETM_TJOB_ATTACHMENT_API;
 
     protected static List<BrowserClient> browserClientList;
 
@@ -82,6 +83,9 @@ public class BaseTest {
     public static void setupClass() throws Exception {
         initParameters();
         browserClientList = new ArrayList<>();
+
+        ET_ETM_TJOB_ATTACHMENT_API = System
+                .getenv("ET_ETM_TJOB_ATTACHMENT_API");
 
         /* *********************************** */
         /* ******** Openvidu Sut init ******** */

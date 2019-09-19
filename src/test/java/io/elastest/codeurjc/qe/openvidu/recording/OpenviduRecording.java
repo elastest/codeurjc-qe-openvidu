@@ -75,6 +75,10 @@ public class OpenviduRecording extends RecordingBaseTest {
                 try {
                     firstBrowser.stopRecording(localRecorderId);
                     firstBrowser.downloadRecording(localRecorderId);
+                    sleep(5000);
+                    StringBuffer file = getDownloadedFile(firstBrowser,
+                            localRecorderId + ".webm");
+                    attachFileToExecution(file);
                 } catch (Exception e1) {
                     e1.printStackTrace();
                     String msg = "Error on stop or download recording for localRecorder "
@@ -82,8 +86,6 @@ public class OpenviduRecording extends RecordingBaseTest {
                     throw new Exception(msg);
                 }
             }
-            sleep(2000);
-            getDownloadedFiles(firstBrowser);
             sleep(20000);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -249,12 +251,69 @@ public class OpenviduRecording extends RecordingBaseTest {
             SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
                     .getSessionId();
 
+            String folder = "/home/ubuntu/Downloads";
+
+            // http://eusip:eusport/eus/v1/browserfile/session/sessionID//home/ubuntu/Downloads/?isDirectory=true
+
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            url += "browserfile/session/" + sessionId.toString()
-                    + "//home/ubuntu/Downloads/?isDirectory=true";
-            
-            StringBuffer response = restClient.sendGet(url);
-            logger.debug("Downloaded files response: {}", response);
+            url += "browserfile/session/" + sessionId.toString() + "/";
+
+            StringBuffer response;
+            try {
+                response = restClient
+                        .sendGet(url + folder + "/?isDirectory=true");
+            } catch (Exception e) {
+                response = restClient.sendGet(
+                        url + folder.toLowerCase() + "/?isDirectory=true");
+            }
+
+            logger.info("Downloaded files response: {}", response);
+        }
+    }
+
+    public StringBuffer getDownloadedFile(BrowserClient browserClient,
+            String fileName) throws Exception {
+        if (EUS_URL != null) {
+            logger.info("Getting downloaded file with name {}", fileName);
+            RestClient restClient = new RestClient();
+
+            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
+                    .getSessionId();
+
+            String folder = "/home/ubuntu/Downloads";
+
+            // http://eusip:eusport/eus/v1/browserfile/session/sessionID//home/ubuntu/Downloads/?isDirectory=true
+
+            String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
+            url += "browserfile/session/" + sessionId.toString() + "/";
+
+            StringBuffer response;
+            try {
+                response = restClient.sendGet(
+                        url + folder + "/" + fileName + "/?isDirectory=false");
+            } catch (Exception e) {
+                response = restClient.sendGet(url + folder.toLowerCase() + "/"
+                        + fileName + "/?isDirectory=false");
+            }
+
+            logger.info("Downloaded file with name {} response: {}", fileName,
+                    response);
+
+            return response;
+        }
+        return null;
+    }
+
+    public void attachFileToExecution(StringBuffer file) {
+        if (ET_ETM_TJOB_ATTACHMENT_API != null) {
+            logger.info("Attaching file to TJob Exec");
+            RestClient restClient = new RestClient();
+
+            StringBuffer response = restClient.postMultipart(
+                    ET_ETM_TJOB_ATTACHMENT_API, "",
+                    String.valueOf(file).getBytes());
+
+            logger.info("Downloaded files response: {}", response);
         }
     }
 }
