@@ -242,6 +242,7 @@ public class OpenviduRecording extends RecordingBaseTest {
     public void getDownloadedFiles(BrowserClient browserClient)
             throws Exception {
         if (EUS_URL != null) {
+            logger.info("Getting downloaded files");
             RestClient restClient = new RestClient();
 
             SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
@@ -249,9 +250,9 @@ public class OpenviduRecording extends RecordingBaseTest {
 
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
             url += "/browserfile/session/" + sessionId.toString()
-                    + "//home/ubuntu/Downloads/?isDirectory=true";
+                    + "//home/ubuntu/downloads/?isDirectory=true";
             StringBuffer response = restClient.sendGet(url);
-            logger.debug("Response: {}", response);
+            logger.debug("Downloaded files response: {}", response);
         }
     }
 }
