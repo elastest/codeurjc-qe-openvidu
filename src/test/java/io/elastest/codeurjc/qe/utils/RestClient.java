@@ -25,8 +25,8 @@ public class RestClient {
         con.setRequestMethod("GET");
 
         int responseCode = con.getResponseCode();
-        logger.debug("Sending 'GET' request to URL : " + url);
-        logger.debug("Response Code : " + responseCode);
+        logger.info("Sending 'GET' request to URL : " + url);
+        logger.info("Response Code : " + responseCode);
 
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));
@@ -39,8 +39,7 @@ public class RestClient {
         in.close();
 
         // print result
-        logger.debug(response.toString());
-
+        logger.info("GET result: {}", response.toString());
         return response;
     }
 
@@ -63,9 +62,9 @@ public class RestClient {
         wr.close();
 
         int responseCode = con.getResponseCode();
-        logger.debug("Sending 'POST' request to URL : " + url);
-        logger.debug("Post parameters : " + urlParameters);
-        logger.debug("Response Code : " + responseCode);
+        logger.info("Sending 'POST' request to URL : " + url);
+        logger.info("Post parameters : " + urlParameters);
+        logger.info("Response Code : " + responseCode);
 
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));
@@ -78,7 +77,7 @@ public class RestClient {
         in.close();
 
         // print result
-        logger.debug(response.toString());
+        logger.info("POST result: {}", response.toString());
 
         return response;
     }

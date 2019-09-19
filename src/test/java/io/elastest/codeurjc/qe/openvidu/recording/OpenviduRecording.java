@@ -249,8 +249,9 @@ public class OpenviduRecording extends RecordingBaseTest {
                     .getSessionId();
 
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            url += "/browserfile/session/" + sessionId.toString()
+            url += "browserfile/session/" + sessionId.toString()
                     + "//home/ubuntu/downloads/?isDirectory=true";
+            
             StringBuffer response = restClient.sendGet(url);
             logger.debug("Downloaded files response: {}", response);
         }
