@@ -258,30 +258,46 @@ public class BrowserClient {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
                 "var result = JSON.stringify(window.subscriberStreamIds);"
                         + "return result;");
-        logger.info("Streams string: {}", streams);
+        logger.info("Subscriber Streams string: {}", streams);
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
 
     public String initLocalRecorder(String streamId) throws Exception {
+        logger.info("Init local recorder from streamId '{}'", streamId);
         String localRecorderId = (String) ((JavascriptExecutor) driver)
                 .executeScript("var localRecorderId = initLocalRecorder('"
                         + streamId + "');" + "return localRecorderId;");
+        logger.info(
+                "Local recorder from streamId '{}' has been initialized with ID '{}'",
+                streamId, localRecorderId);
         return localRecorderId;
     }
 
     public void startRecording(String localRecorderId) throws Exception {
+        logger.info("Starting recording with local recorder Id: {}",
+                localRecorderId);
         ((JavascriptExecutor) driver)
                 .executeScript("startRecording('" + localRecorderId + "');");
+        logger.info("Recording with local recorder Id '{}' has been started",
+                localRecorderId);
     }
 
     public void stopRecording(String localRecorderId) throws Exception {
+        logger.info("Stopping recording with local recorder Id: {}",
+                localRecorderId);
         ((JavascriptExecutor) driver)
                 .executeScript("stopRecording('" + localRecorderId + "');");
+        logger.info("Recording with local recorder Id '{}' has been stopped",
+                localRecorderId);
     }
 
     public void downloadRecording(String localRecorderId) throws Exception {
+        logger.info("Downloading recording with local recorder Id: {}",
+                localRecorderId);
         ((JavascriptExecutor) driver)
                 .executeScript("downloadRecording('" + localRecorderId + "');");
+        logger.info("Recording with local recorder Id '{}' has been downloaded",
+                localRecorderId);
     }
 }
