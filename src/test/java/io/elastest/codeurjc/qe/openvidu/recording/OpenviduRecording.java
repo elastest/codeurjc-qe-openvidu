@@ -286,8 +286,8 @@ public class OpenviduRecording extends RecordingBaseTest {
                         + fileName + "?isDirectory=false");
             }
 
-            logger.info("Downloaded file with name {} response: {}", fileName,
-                    response);
+            logger.info("File with name {} has been downloaded successfully",
+                    fileName);
 
             return response;
         }
