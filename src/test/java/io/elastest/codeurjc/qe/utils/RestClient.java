@@ -136,7 +136,6 @@ public class RestClient {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost uploadFile = new HttpPost(urlString);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addTextBody("field1", "yes", ContentType.TEXT_PLAIN);
 
         // This attaches the file to the POST:
         builder.addBinaryBody("file", body.getBytes(),
@@ -144,10 +143,13 @@ public class RestClient {
 
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);
+
         CloseableHttpResponse response = httpClient.execute(uploadFile);
         logger.info("Response Code: {}",
                 response.getStatusLine().getStatusCode());
+
         HttpEntity responseEntity = response.getEntity();
+        response.close();
         return responseEntity;
     }
 
