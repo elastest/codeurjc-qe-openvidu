@@ -75,7 +75,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             }
             sleep(20000);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            e.printStackTrace();
             Assertions.fail(e.getMessage());
             waitForSessionReadyLatch.abort(e.getMessage());
         }
