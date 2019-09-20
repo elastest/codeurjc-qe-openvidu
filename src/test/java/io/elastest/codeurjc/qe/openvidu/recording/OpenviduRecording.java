@@ -309,7 +309,8 @@ public class OpenviduRecording extends RecordingBaseTest {
                         fileName);
             } catch (Exception e) {
                 String msg = "Error on attach file: " + e.getMessage();
-                throw new Exception(msg);
+                logger.error(msg);
+                throw e;
             }
         }
     }

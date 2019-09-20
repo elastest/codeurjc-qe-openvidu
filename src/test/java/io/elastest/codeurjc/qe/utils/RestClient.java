@@ -38,8 +38,6 @@ public class RestClient {
         }
         in.close();
 
-        // print result
-        logger.info("GET result: {}", response.toString());
         return response;
     }
 
@@ -77,9 +75,6 @@ public class RestClient {
             response.append(inputLine);
         }
         in.close();
-
-        // print result
-        logger.info("POST result: {}", response.toString());
 
         return response;
     }
@@ -123,9 +118,6 @@ public class RestClient {
             response.append(inputLine);
         }
         in.close();
-
-        // print result
-        logger.info("POST result: {}", response.toString());
 
         return response;
 
