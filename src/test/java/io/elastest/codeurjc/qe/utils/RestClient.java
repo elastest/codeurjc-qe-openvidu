@@ -149,7 +149,7 @@ public class RestClient {
         bw.close();
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost uploadFile = new HttpPost("...");
+        HttpPost uploadFile = new HttpPost(urlString);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.addTextBody("field1", "yes", ContentType.TEXT_PLAIN);
 
