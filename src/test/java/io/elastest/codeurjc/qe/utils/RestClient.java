@@ -8,6 +8,7 @@ import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -129,14 +130,26 @@ public class RestClient {
     }
 
     public StringBuffer postMultipart2(String urlString, String fileNameWithExt,
-            byte[] body) throws Exception {
+            String body) throws Exception {
+
+        String[] splittedFileName = fileNameWithExt.split("\\.");
+        File temp = File.createTempFile(splittedFileName[0],
+                splittedFileName[1]);
+        temp.setWritable(true);
+        temp.setReadable(true);
+        temp.setExecutable(false);
+
+        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+        bw.write(body);
+        bw.close();
+
         // Connect to the web server endpoint
         URL serverUrl = new URL(urlString);
         HttpURLConnection urlConnection = (HttpURLConnection) serverUrl
                 .openConnection();
 
         String boundaryString = "----SomeRandomText";
-        String fileUrl = "/tmp/" + fileNameWithExt;
+        String fileUrl = temp.getAbsolutePath();
         File logFileToUpload = new File(fileUrl);
 
         // Indicate that we want to write to the HTTP request body
@@ -155,13 +168,13 @@ public class RestClient {
         httpRequestBodyWriter.write(
                 "Content-Disposition: form-data; name=\"myFileDescription\"");
         httpRequestBodyWriter.write("\n\n");
-        httpRequestBodyWriter.write("Log file for 20150208");
+        httpRequestBodyWriter.write("Attachment");
 
         // Include the section to describe the file
         httpRequestBodyWriter.write("\n--" + boundaryString + "\n");
         httpRequestBodyWriter.write("Content-Disposition: form-data;"
-                + "name=\"myFile\";" + "filename=\"" + fileNameWithExt + "\""
-                + "\nContent-Type: text/plain\n\n");
+                + "name=\"myFile\";" + "filename=\"" + logFileToUpload.getName()
+                + "\"" + "\nContent-Type: text/plain\n\n");
         httpRequestBodyWriter.flush();
 
         // Write the actual file contents
@@ -169,8 +182,9 @@ public class RestClient {
                 logFileToUpload);
 
         int bytesRead;
-        while ((bytesRead = inputStreamToLogFile.read(body)) != -1) {
-            outputStreamToRequestBody.write(body, 0, bytesRead);
+        byte[] dataBuffer = new byte[1024];
+        while ((bytesRead = inputStreamToLogFile.read(dataBuffer)) != -1) {
+            outputStreamToRequestBody.write(dataBuffer, 0, bytesRead);
         }
 
         outputStreamToRequestBody.flush();
@@ -183,6 +197,7 @@ public class RestClient {
         outputStreamToRequestBody.close();
         httpRequestBodyWriter.close();
 
+        temp.delete();
         // Read response from web server, which will trigger the multipart HTTP
         // request to be sent.
         BufferedReader httpResponseReader = new BufferedReader(
