@@ -84,8 +84,8 @@ public class RestClient {
         return response;
     }
 
-    public StringBuffer postMultipart(String urlString,
-            String fileNameWithExt, byte[] body) {
+    public StringBuffer postMultipart(String urlString, String fileNameWithExt,
+            byte[] body) throws Exception {
 
         String attachmentName = "file";
         String attachmentFileName = fileNameWithExt;
@@ -93,47 +93,42 @@ public class RestClient {
         String twoHyphens = "--";
         String boundary = "*****";
 
-        try {
-            URL url = new URL(urlString);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setDoOutput(true);
-            con.setRequestMethod("POST");
+        URL url = new URL(urlString);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setDoOutput(true);
+        con.setRequestMethod("POST");
 
-            con.setRequestProperty("Content-Type",
-                    "multipart/form-data;boundary=" + boundary);
-            DataOutputStream request = new DataOutputStream(
-                    con.getOutputStream());
+        con.setRequestProperty("Content-Type",
+                "multipart/form-data;boundary=" + boundary);
+        DataOutputStream request = new DataOutputStream(con.getOutputStream());
 
-            request.writeBytes(twoHyphens + boundary + crlf);
-            request.writeBytes("Content-Disposition: form-data; name=\""
-                    + attachmentName + "\";filename=\"" + attachmentFileName
-                    + "\"" + crlf);
+        request.writeBytes(twoHyphens + boundary + crlf);
+        request.writeBytes(
+                "Content-Disposition: form-data; name=\"" + attachmentName
+                        + "\";filename=\"" + attachmentFileName + "\"" + crlf);
 
-            request.writeBytes(crlf);
-            request.write(body);
-            request.writeBytes(crlf);
-            request.writeBytes(twoHyphens + boundary + twoHyphens + crlf);
-            request.flush();
-            request.close();
+        request.writeBytes(crlf);
+        request.write(body);
+        request.writeBytes(crlf);
+        request.writeBytes(twoHyphens + boundary + twoHyphens + crlf);
+        request.flush();
+        request.close();
 
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
 
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
-
-            // print result
-            logger.info("POST result: {}", response.toString());
-
-            return response;
-        } catch (Exception e) {
-            e.printStackTrace();
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
         }
-        return null;
+        in.close();
+
+        // print result
+        logger.info("POST result: {}", response.toString());
+
+        return response;
+
     }
 
 }

@@ -264,40 +264,67 @@ public class BrowserClient {
     }
 
     public String initLocalRecorder(String streamId) throws Exception {
-        logger.info("Init local recorder from streamId '{}'", streamId);
-        String localRecorderId = (String) ((JavascriptExecutor) driver)
-                .executeScript("var localRecorderId = initLocalRecorder('"
-                        + streamId + "');" + "return localRecorderId;");
-        logger.info(
-                "Local recorder from streamId '{}' has been initialized with ID '{}'",
-                streamId, localRecorderId);
-        return localRecorderId;
+        try {
+            logger.info("Init local recorder from streamId '{}'", streamId);
+            String localRecorderId = (String) ((JavascriptExecutor) driver)
+                    .executeScript("var localRecorderId = initLocalRecorder('"
+                            + streamId + "');" + "return localRecorderId;");
+            logger.info(
+                    "Local recorder from streamId '{}' has been initialized with ID '{}'",
+                    streamId, localRecorderId);
+            return localRecorderId;
+        } catch (Exception e) {
+            String msg = "Error on init local recorder for stream " + streamId
+                    + ": " + e.getMessage();
+            throw new Exception(msg);
+        }
     }
 
     public void startRecording(String localRecorderId) throws Exception {
-        logger.info("Starting recording with local recorder Id: {}",
-                localRecorderId);
-        ((JavascriptExecutor) driver)
-                .executeScript("startRecording('" + localRecorderId + "');");
-        logger.info("Recording with local recorder Id '{}' has been started",
-                localRecorderId);
+        try {
+            logger.info("Starting recording with local recorder Id: {}",
+                    localRecorderId);
+            ((JavascriptExecutor) driver).executeScript(
+                    "startRecording('" + localRecorderId + "');");
+            logger.info(
+                    "Recording with local recorder Id '{}' has been started",
+                    localRecorderId);
+        } catch (Exception e) {
+            String msg = "Error on start recording for localRecorder "
+                    + localRecorderId + ": " + e.getMessage();
+            throw new Exception(msg);
+        }
     }
 
     public void stopRecording(String localRecorderId) throws Exception {
-        logger.info("Stopping recording with local recorder Id: {}",
-                localRecorderId);
-        ((JavascriptExecutor) driver)
-                .executeScript("stopRecording('" + localRecorderId + "');");
-        logger.info("Recording with local recorder Id '{}' has been stopped",
-                localRecorderId);
+        try {
+            logger.info("Stopping recording with local recorder Id: {}",
+                    localRecorderId);
+            ((JavascriptExecutor) driver)
+                    .executeScript("stopRecording('" + localRecorderId + "');");
+            logger.info(
+                    "Recording with local recorder Id '{}' has been stopped",
+                    localRecorderId);
+        } catch (Exception e) {
+            String msg = "Error on stop recording for localRecorder "
+                    + localRecorderId + ": " + e.getMessage();
+            throw new Exception(msg);
+        }
     }
 
     public void downloadRecording(String localRecorderId) throws Exception {
-        logger.info("Downloading recording with local recorder Id: {}",
-                localRecorderId);
-        ((JavascriptExecutor) driver)
-                .executeScript("downloadRecording('" + localRecorderId + "');");
-        logger.info("Recording with local recorder Id '{}' has been downloaded",
-                localRecorderId);
+        try {
+            logger.info("Downloading recording with local recorder Id: {}",
+                    localRecorderId);
+            ((JavascriptExecutor) driver).executeScript(
+                    "downloadRecording('" + localRecorderId + "');");
+            logger.info(
+                    "Recording with local recorder Id '{}' has been downloaded",
+                    localRecorderId);
+        } catch (Exception e) {
+            String msg = "Error on download recording for localRecorder "
+                    + localRecorderId + ": " + e.getMessage();
+            throw new Exception(msg);
+        }
     }
 }

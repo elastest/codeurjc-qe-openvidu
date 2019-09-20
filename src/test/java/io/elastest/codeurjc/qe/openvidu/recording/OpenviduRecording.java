@@ -46,20 +46,13 @@ public class OpenviduRecording extends RecordingBaseTest {
         List<String> localRecorderIds = new ArrayList<>();
         try {
             JsonArray subscriberStreamIds = firstBrowser.getSubscriberStreams();
-            try {
-                for (JsonElement streamId : subscriberStreamIds) {
-                    if (streamId != null) {
-                        String localRecorderId = firstBrowser
-                                .initLocalRecorder(streamId.getAsString());
-                        localRecorderIds.add(localRecorderId);
-                        firstBrowser.startRecording(localRecorderId);
-                    }
+            for (JsonElement streamId : subscriberStreamIds) {
+                if (streamId != null) {
+                    String localRecorderId = firstBrowser
+                            .initLocalRecorder(streamId.getAsString());
+                    localRecorderIds.add(localRecorderId);
+                    firstBrowser.startRecording(localRecorderId);
                 }
-            } catch (Exception e1) {
-                e1.printStackTrace();
-                String msg = "Error on init localRecorder or start recording: "
-                        + e1.getMessage();
-                throw new Exception(msg);
             }
 
             // seconds
@@ -72,19 +65,13 @@ public class OpenviduRecording extends RecordingBaseTest {
             }
 
             for (String localRecorderId : localRecorderIds) {
-                try {
-                    firstBrowser.stopRecording(localRecorderId);
-                    firstBrowser.downloadRecording(localRecorderId);
-                    TimeUnit.SECONDS.sleep(5);
-                    StringBuffer file = getDownloadedFile(firstBrowser,
-                            localRecorderId + ".webm");
-                    attachFileToExecution(file);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                    String msg = "Error on stop or download recording for localRecorder "
-                            + localRecorderId + ": " + e1.getMessage();
-                    throw new Exception(msg);
-                }
+                firstBrowser.stopRecording(localRecorderId);
+                firstBrowser.downloadRecording(localRecorderId);
+                TimeUnit.SECONDS.sleep(5);
+                final String fileName = localRecorderId + ".webm";
+                StringBuffer file = getDownloadedFile(firstBrowser, fileName);
+                attachFileToExecution(file, fileName);
+
             }
             sleep(20000);
         } catch (Exception e) {
@@ -307,16 +294,22 @@ public class OpenviduRecording extends RecordingBaseTest {
         return null;
     }
 
-    public void attachFileToExecution(StringBuffer file) {
+    public void attachFileToExecution(StringBuffer file, String fileName)
+            throws Exception {
         if (ET_ETM_TJOB_ATTACHMENT_API != null) {
-            logger.info("Attaching file to TJob Exec");
-            RestClient restClient = new RestClient();
+            try {
+                logger.info("Attaching file to TJob Exec");
+                RestClient restClient = new RestClient();
 
-            StringBuffer response = restClient.postMultipart(
-                    ET_ETM_TJOB_ATTACHMENT_API, "",
-                    String.valueOf(file).getBytes());
+                StringBuffer response = restClient.postMultipart(
+                        ET_ETM_TJOB_ATTACHMENT_API, fileName,
+                        String.valueOf(file).getBytes());
 
-            logger.info("Downloaded files response: {}", response);
+                logger.info("Downloaded files response: {}", response);
+            } catch (Exception e) {
+                String msg = "Error on attach file: " + e.getMessage();
+                throw new Exception(msg);
+            }
         }
     }
 }
