@@ -301,7 +301,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 logger.info("Attaching file {} to TJob Exec", fileName);
                 RestClient restClient = new RestClient();
 
-                StringBuffer response = restClient.postMultipart(
+                StringBuffer response = restClient.postMultipart2(
                         ET_ETM_TJOB_ATTACHMENT_API, fileName,
                         String.valueOf(file).getBytes());
 

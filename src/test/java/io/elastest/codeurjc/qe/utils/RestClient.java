@@ -4,8 +4,13 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -121,6 +126,74 @@ public class RestClient {
 
         return response;
 
+    }
+
+    public StringBuffer postMultipart2(String urlString, String fileNameWithExt,
+            byte[] body) throws Exception {
+        // Connect to the web server endpoint
+        URL serverUrl = new URL(urlString);
+        HttpURLConnection urlConnection = (HttpURLConnection) serverUrl
+                .openConnection();
+
+        String boundaryString = "----SomeRandomText";
+        String fileUrl = "/tmp/" + fileNameWithExt;
+        File logFileToUpload = new File(fileUrl);
+
+        // Indicate that we want to write to the HTTP request body
+        urlConnection.setDoOutput(true);
+        urlConnection.setRequestMethod("POST");
+        urlConnection.addRequestProperty("Content-Type",
+                "multipart/form-data; boundary=" + boundaryString);
+
+        OutputStream outputStreamToRequestBody = urlConnection
+                .getOutputStream();
+        BufferedWriter httpRequestBodyWriter = new BufferedWriter(
+                new OutputStreamWriter(outputStreamToRequestBody));
+
+        // Include value from the myFileDescription text area in the post data
+        httpRequestBodyWriter.write("\n\n--" + boundaryString + "\n");
+        httpRequestBodyWriter.write(
+                "Content-Disposition: form-data; name=\"myFileDescription\"");
+        httpRequestBodyWriter.write("\n\n");
+        httpRequestBodyWriter.write("Log file for 20150208");
+
+        // Include the section to describe the file
+        httpRequestBodyWriter.write("\n--" + boundaryString + "\n");
+        httpRequestBodyWriter.write("Content-Disposition: form-data;"
+                + "name=\"myFile\";" + "filename=\"" + fileNameWithExt + "\""
+                + "\nContent-Type: text/plain\n\n");
+        httpRequestBodyWriter.flush();
+
+        // Write the actual file contents
+        FileInputStream inputStreamToLogFile = new FileInputStream(
+                logFileToUpload);
+
+        int bytesRead;
+        while ((bytesRead = inputStreamToLogFile.read(body)) != -1) {
+            outputStreamToRequestBody.write(body, 0, bytesRead);
+        }
+
+        outputStreamToRequestBody.flush();
+
+        // Mark the end of the multipart http request
+        httpRequestBodyWriter.write("\n--" + boundaryString + "--\n");
+        httpRequestBodyWriter.flush();
+
+        // Close the streams
+        outputStreamToRequestBody.close();
+        httpRequestBodyWriter.close();
+
+        // Read response from web server, which will trigger the multipart HTTP
+        // request to be sent.
+        BufferedReader httpResponseReader = new BufferedReader(
+                new InputStreamReader(urlConnection.getInputStream()));
+        String lineRead;
+        StringBuffer response = new StringBuffer();
+        while ((lineRead = httpResponseReader.readLine()) != null) {
+            response.append(lineRead);
+        }
+        inputStreamToLogFile.close();
+        return response;
     }
 
 }
