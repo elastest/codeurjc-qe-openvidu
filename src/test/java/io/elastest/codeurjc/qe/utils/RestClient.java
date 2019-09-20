@@ -145,6 +145,8 @@ public class RestClient {
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);
         CloseableHttpResponse response = httpClient.execute(uploadFile);
+        logger.info("Response Code: {}",
+                response.getStatusLine().getStatusCode());
         HttpEntity responseEntity = response.getEntity();
         return responseEntity;
     }
