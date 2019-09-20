@@ -10,13 +10,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 
 public class RestClient {
@@ -129,7 +134,7 @@ public class RestClient {
 
     }
 
-    public StringBuffer postMultipart2(String urlString, String fileNameWithExt,
+    public HttpEntity postMultipart2(String urlString, String fileNameWithExt,
             String body) throws Exception {
 
         String[] splittedFileName = fileNameWithExt.split("\\.");
@@ -143,75 +148,20 @@ public class RestClient {
         bw.write(body);
         bw.close();
 
-        // Connect to the web server endpoint
-        URL serverUrl = new URL(urlString);
-        HttpURLConnection urlConnection = (HttpURLConnection) serverUrl
-                .openConnection();
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost uploadFile = new HttpPost("...");
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addTextBody("field1", "yes", ContentType.TEXT_PLAIN);
 
-        String boundaryString = "----SomeRandomText";
-        String fileUrl = temp.getAbsolutePath();
-        File logFileToUpload = new File(fileUrl);
+        // This attaches the file to the POST:
+        builder.addBinaryBody("file", new FileInputStream(temp),
+                ContentType.APPLICATION_OCTET_STREAM, temp.getName());
 
-        // Indicate that we want to write to the HTTP request body
-        urlConnection.setDoOutput(true);
-        urlConnection.setRequestMethod("POST");
-        urlConnection.addRequestProperty("Content-Type",
-                "multipart/form-data; boundary=" + boundaryString);
-
-        OutputStream outputStreamToRequestBody = urlConnection
-                .getOutputStream();
-        BufferedWriter httpRequestBodyWriter = new BufferedWriter(
-                new OutputStreamWriter(outputStreamToRequestBody));
-
-        // Include value from the myFileDescription text area in the post data
-        httpRequestBodyWriter.write("\n\n--" + boundaryString + "\n");
-        httpRequestBodyWriter.write(
-                "Content-Disposition: form-data; name=\"myFileDescription\"");
-        httpRequestBodyWriter.write("\n\n");
-        httpRequestBodyWriter.write("Attachment");
-
-        // Include the section to describe the file
-        httpRequestBodyWriter.write("\n--" + boundaryString + "\n");
-        httpRequestBodyWriter.write("Content-Disposition: form-data;"
-                + "name=\"myFile\";" + "filename=\"" + logFileToUpload.getName()
-                + "\"" + "\nContent-Type: text/plain\n\n");
-        httpRequestBodyWriter.flush();
-
-        // Write the actual file contents
-        FileInputStream inputStreamToLogFile = new FileInputStream(
-                logFileToUpload);
-
-        int bytesRead;
-        byte[] dataBuffer = new byte[1024];
-        while ((bytesRead = inputStreamToLogFile.read(dataBuffer)) != -1) {
-            outputStreamToRequestBody.write(dataBuffer, 0, bytesRead);
-        }
-
-        outputStreamToRequestBody.flush();
-
-        // Mark the end of the multipart http request
-        httpRequestBodyWriter.write("\n--" + boundaryString + "--\n");
-        httpRequestBodyWriter.flush();
-
-        // Close the streams
-        outputStreamToRequestBody.close();
-        httpRequestBodyWriter.close();
-
-        temp.delete();
-
-        // // Read response from web server, which will trigger the multipart
-        // HTTP
-        // // request to be sent.
-        // BufferedReader httpResponseReader = new BufferedReader(
-        // new InputStreamReader(urlConnection.getInputStream()));
-        // String lineRead;
-        // StringBuffer response = new StringBuffer();
-        // while ((lineRead = httpResponseReader.readLine()) != null) {
-        // response.append(lineRead);
-        // }
-        // inputStreamToLogFile.close();
-        // return response;
-        return null;
+        HttpEntity multipart = builder.build();
+        uploadFile.setEntity(multipart);
+        CloseableHttpResponse response = httpClient.execute(uploadFile);
+        HttpEntity responseEntity = response.getEntity();
+        return responseEntity;
     }
 
 }

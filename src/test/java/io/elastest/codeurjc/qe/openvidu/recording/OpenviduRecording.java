@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.http.HttpEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -301,8 +302,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 logger.info("Attaching file {} to TJob Exec", fileName);
                 RestClient restClient = new RestClient();
 
-                StringBuffer response = restClient.postMultipart2(
-                        ET_ETM_TJOB_ATTACHMENT_API, fileName,
+                restClient.postMultipart2(ET_ETM_TJOB_ATTACHMENT_API, fileName,
                         String.valueOf(file));
 
                 logger.info("File with name {} has been attached successfully",
