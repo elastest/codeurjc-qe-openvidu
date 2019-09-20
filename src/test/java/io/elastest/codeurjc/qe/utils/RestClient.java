@@ -4,11 +4,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -137,25 +133,14 @@ public class RestClient {
     public HttpEntity postMultipart2(String urlString, String fileNameWithExt,
             String body) throws Exception {
 
-        String[] splittedFileName = fileNameWithExt.split("\\.");
-        File temp = File.createTempFile(splittedFileName[0],
-                splittedFileName[1]);
-        temp.setWritable(true);
-        temp.setReadable(true);
-        temp.setExecutable(false);
-
-        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-        bw.write(body);
-        bw.close();
-
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost uploadFile = new HttpPost(urlString);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.addTextBody("field1", "yes", ContentType.TEXT_PLAIN);
 
         // This attaches the file to the POST:
-        builder.addBinaryBody("file", new FileInputStream(temp),
-                ContentType.APPLICATION_OCTET_STREAM, temp.getName());
+        builder.addBinaryBody("file", body.getBytes(),
+                ContentType.APPLICATION_OCTET_STREAM, fileNameWithExt);
 
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);
