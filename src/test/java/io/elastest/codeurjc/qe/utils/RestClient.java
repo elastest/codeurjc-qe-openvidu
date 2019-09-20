@@ -198,17 +198,20 @@ public class RestClient {
         httpRequestBodyWriter.close();
 
         temp.delete();
-        // Read response from web server, which will trigger the multipart HTTP
-        // request to be sent.
-        BufferedReader httpResponseReader = new BufferedReader(
-                new InputStreamReader(urlConnection.getInputStream()));
-        String lineRead;
-        StringBuffer response = new StringBuffer();
-        while ((lineRead = httpResponseReader.readLine()) != null) {
-            response.append(lineRead);
-        }
-        inputStreamToLogFile.close();
-        return response;
+
+        // // Read response from web server, which will trigger the multipart
+        // HTTP
+        // // request to be sent.
+        // BufferedReader httpResponseReader = new BufferedReader(
+        // new InputStreamReader(urlConnection.getInputStream()));
+        // String lineRead;
+        // StringBuffer response = new StringBuffer();
+        // while ((lineRead = httpResponseReader.readLine()) != null) {
+        // response.append(lineRead);
+        // }
+        // inputStreamToLogFile.close();
+        // return response;
+        return null;
     }
 
 }
