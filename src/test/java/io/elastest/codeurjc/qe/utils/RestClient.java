@@ -145,11 +145,16 @@ public class RestClient {
         uploadFile.setEntity(multipart);
 
         CloseableHttpResponse response = httpClient.execute(uploadFile);
-        logger.info("Response Code: {}",
-                response.getStatusLine().getStatusCode());
 
+        final int statusCode = response.getStatusLine().getStatusCode();
+        logger.info("Response Code: {}", statusCode);
         HttpEntity responseEntity = response.getEntity();
         response.close();
+
+        if (statusCode != 200) {
+            throw new Exception("Error on attach file: Code" + statusCode);
+        }
+
         return responseEntity;
     }
 
