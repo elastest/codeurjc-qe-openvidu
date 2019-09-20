@@ -75,7 +75,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 try {
                     firstBrowser.stopRecording(localRecorderId);
                     firstBrowser.downloadRecording(localRecorderId);
-                    sleep(5000);
+                    TimeUnit.SECONDS.sleep(5);
                     StringBuffer file = getDownloadedFile(firstBrowser,
                             localRecorderId + ".webm");
                     attachFileToExecution(file);
@@ -292,6 +292,9 @@ public class OpenviduRecording extends RecordingBaseTest {
                 response = restClient.sendGet(
                         url + folder + "/" + fileName + "/?isDirectory=false");
             } catch (Exception e) {
+                logger.info(
+                        "First attempt to get file with name {} failed. Trying Again.",
+                        fileName);
                 response = restClient.sendGet(url + folder.toLowerCase() + "/"
                         + fileName + "/?isDirectory=false");
             }
