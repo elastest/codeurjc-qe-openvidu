@@ -282,7 +282,7 @@ public class OpenviduRecording extends RecordingBaseTest {
 
             String folder = "/home/ubuntu/Downloads";
 
-            // http://eusip:eusport/eus/v1/browserfile/session/sessionID//home/ubuntu/Downloads/?isDirectory=true
+            // http://eusip:eusport/eus/v1/browserfile/session/sessionID//home/ubuntu/Downloads/filename.ext?isDirectory=false
 
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
             url += "browserfile/session/" + sessionId.toString() + "/";
@@ -290,13 +290,13 @@ public class OpenviduRecording extends RecordingBaseTest {
             StringBuffer response;
             try {
                 response = restClient.sendGet(
-                        url + folder + "/" + fileName + "/?isDirectory=false");
+                        url + folder + "/" + fileName + "?isDirectory=false");
             } catch (Exception e) {
                 logger.info(
                         "First attempt to get file with name {} failed. Trying Again.",
                         fileName);
                 response = restClient.sendGet(url + folder.toLowerCase() + "/"
-                        + fileName + "/?isDirectory=false");
+                        + fileName + "?isDirectory=false");
             }
 
             logger.info("Downloaded file with name {} response: {}", fileName,
