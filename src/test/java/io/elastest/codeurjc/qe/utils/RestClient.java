@@ -9,13 +9,13 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -26,28 +26,23 @@ public class RestClient {
     protected static final Logger logger = getLogger(lookup().lookupClass());
 
     // HTTP GET request
-    public StringBuffer sendGet(String url) throws Exception {
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+    public HttpEntity sendGet(String url) throws Exception {
 
-        // optional default is GET
-        con.setRequestMethod("GET");
+        // Do request
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet uploadFile = new HttpGet(url);
 
-        int responseCode = con.getResponseCode();
-        logger.info("Sending 'GET' request to URL : " + url);
-        logger.info("Response Code : " + responseCode);
+        CloseableHttpResponse response = httpClient.execute(uploadFile);
+        final int statusCode = response.getStatusLine().getStatusCode();
+        logger.info("Response Code: {}", statusCode);
+        HttpEntity responseEntity = response.getEntity();
+        response.close();
 
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+        if (statusCode != 200) {
+            throw new Exception("Error on attach file: Code " + statusCode);
         }
-        in.close();
 
-        return response;
+        return responseEntity;
     }
 
     // HTTP POST request

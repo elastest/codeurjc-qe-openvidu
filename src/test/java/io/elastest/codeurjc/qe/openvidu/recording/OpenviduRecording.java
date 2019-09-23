@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.http.HttpEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -69,7 +70,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 firstBrowser.downloadRecording(localRecorderId);
                 TimeUnit.SECONDS.sleep(5);
                 final String fileName = localRecorderId + ".webm";
-                StringBuffer file = getDownloadedFile(firstBrowser, fileName);
+                String file = getDownloadedFile(firstBrowser, fileName);
                 attachFileToExecution(file, fileName);
 
             }
@@ -236,36 +237,7 @@ public class OpenviduRecording extends RecordingBaseTest {
 
     }
 
-    public void getDownloadedFiles(BrowserClient browserClient)
-            throws Exception {
-        if (EUS_URL != null) {
-            logger.info("Getting downloaded files");
-            RestClient restClient = new RestClient();
-
-            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
-                    .getSessionId();
-
-            String folder = "/home/ubuntu/Downloads";
-
-            // http://eusip:eusport/eus/v1/browserfile/session/sessionID//home/ubuntu/Downloads/?isDirectory=true
-
-            String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            url += "browserfile/session/" + sessionId.toString() + "/";
-
-            StringBuffer response;
-            try {
-                response = restClient
-                        .sendGet(url + folder + "/?isDirectory=true");
-            } catch (Exception e) {
-                response = restClient.sendGet(
-                        url + folder.toLowerCase() + "/?isDirectory=true");
-            }
-
-            logger.info("Downloaded files response: {}", response);
-        }
-    }
-
-    public StringBuffer getDownloadedFile(BrowserClient browserClient,
+    public String getDownloadedFile(BrowserClient browserClient,
             String fileName) throws Exception {
         if (EUS_URL != null) {
             logger.info("Getting downloaded file with name {}", fileName);
@@ -281,7 +253,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
             url += "browserfile/session/" + sessionId.toString() + "/";
 
-            StringBuffer response;
+            HttpEntity response;
             try {
                 response = restClient.sendGet(
                         url + folder + "/" + fileName + "?isDirectory=false");
@@ -293,15 +265,16 @@ public class OpenviduRecording extends RecordingBaseTest {
                         + fileName + "?isDirectory=false");
             }
 
-            logger.info("File with name {} has been downloaded successfully",
-                    fileName);
+            logger.info(
+                    "File with name {} has been downloaded successfully: {}",
+                    fileName, response);
 
-            return response;
+            return response.toString();
         }
         return null;
     }
 
-    public void attachFileToExecution(StringBuffer file, String fileName)
+    public void attachFileToExecution(String file, String fileName)
             throws Exception {
         if (ET_ETM_TJOB_ATTACHMENT_API != null) {
             try {
@@ -309,7 +282,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 RestClient restClient = new RestClient();
 
                 restClient.postMultipart(ET_ETM_TJOB_ATTACHMENT_API, fileName,
-                        file.toString());
+                        file);
 
                 logger.info("File with name {} has been attached successfully",
                         fileName);
