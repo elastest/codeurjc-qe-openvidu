@@ -28,6 +28,7 @@ public class RestClient {
 
     // HTTP GET request
     public String sendGet(String url) throws Exception {
+        logger.info("Doing get to {}", url);
 
         // Do request
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -37,7 +38,7 @@ public class RestClient {
         final int statusCode = response.getStatusLine().getStatusCode();
         logger.info("Response Code: {}", statusCode);
         HttpEntity responseEntity = response.getEntity();
-        String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
+        String responseBody = EntityUtils.toString(responseEntity);
         response.close();
 
         if (statusCode != 200) {
