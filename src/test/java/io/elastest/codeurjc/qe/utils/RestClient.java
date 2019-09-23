@@ -132,7 +132,7 @@ public class RestClient {
 
     public HttpEntity postMultipart2(String urlString, String fileNameWithExt,
             String body) throws Exception {
-
+        logger.info("Doing multipart post to {}", urlString);
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost uploadFile = new HttpPost(urlString);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -143,6 +143,7 @@ public class RestClient {
 
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);
+        
 
         CloseableHttpResponse response = httpClient.execute(uploadFile);
 
