@@ -27,7 +27,7 @@ public class RestClient {
     protected static final Logger logger = getLogger(lookup().lookupClass());
 
     // HTTP GET request
-    public HttpEntity sendGet(String url) throws Exception {
+    public String sendGet(String url) throws Exception {
 
         // Do request
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -37,15 +37,14 @@ public class RestClient {
         final int statusCode = response.getStatusLine().getStatusCode();
         logger.info("Response Code: {}", statusCode);
         HttpEntity responseEntity = response.getEntity();
-        logger.info("asdasd {}", EntityUtils.toString(responseEntity, "UTF-8"));
-
+        String responseBody = EntityUtils.toString(responseEntity, "UTF-8");
         response.close();
 
         if (statusCode != 200) {
             throw new Exception("Error on attach file: Code " + statusCode);
         }
 
-        return responseEntity;
+        return responseBody;
     }
 
     // HTTP POST request

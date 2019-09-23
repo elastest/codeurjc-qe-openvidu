@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.http.HttpEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -253,7 +252,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
             url += "browserfile/session/" + sessionId.toString() + "/";
 
-            HttpEntity response;
+            String response;
             try {
                 response = restClient.sendGet(
                         url + folder + "/" + fileName + "?isDirectory=false");
@@ -268,7 +267,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             logger.info("File with name {} has been downloaded successfully",
                     fileName);
 
-            return response.toString();
+            return response;
         }
         return null;
     }
