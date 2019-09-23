@@ -309,7 +309,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 RestClient restClient = new RestClient();
 
                 restClient.postMultipart(ET_ETM_TJOB_ATTACHMENT_API, fileName,
-                        String.valueOf(file));
+                        file.toString());
 
                 logger.info("File with name {} has been attached successfully",
                         fileName);

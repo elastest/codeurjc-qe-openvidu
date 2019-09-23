@@ -95,7 +95,7 @@ public class RestClient {
         // Save to tmp file
         String[] splittedFileName = fileNameWithExt.split("\\.");
         File temp = File.createTempFile(splittedFileName[0],
-                splittedFileName[1]);
+                "." + splittedFileName[1]);
         temp.setWritable(true);
         temp.setReadable(true);
         temp.setExecutable(false);
