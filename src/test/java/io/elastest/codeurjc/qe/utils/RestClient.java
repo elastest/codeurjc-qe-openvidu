@@ -14,7 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -94,10 +93,7 @@ public class RestClient {
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 
         // This attaches the file to the POST:
-        builder.addBinaryBody("file", body.getBytes(),
-                ContentType.APPLICATION_OCTET_STREAM, fileNameWithExt);
-
-        logger.info("aaaaaaaaa {}", body.getBytes());
+        builder.addTextBody("file", body);
 
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);

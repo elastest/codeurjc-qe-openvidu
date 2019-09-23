@@ -305,7 +305,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             throws Exception {
         if (ET_ETM_TJOB_ATTACHMENT_API != null) {
             try {
-                logger.info("Attaching file {} to TJob Exec: {}", fileName,file);
+                logger.info("Attaching file {} to TJob Exec", fileName);
                 RestClient restClient = new RestClient();
 
                 restClient.postMultipart(ET_ETM_TJOB_ATTACHMENT_API, fileName,
