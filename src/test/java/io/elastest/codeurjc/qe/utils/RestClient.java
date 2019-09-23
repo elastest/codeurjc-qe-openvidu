@@ -97,6 +97,8 @@ public class RestClient {
         builder.addBinaryBody("file", body.getBytes(),
                 ContentType.APPLICATION_OCTET_STREAM, fileNameWithExt);
 
+        logger.info("aaaaaaaaa {}", body.getBytes());
+
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);
 
