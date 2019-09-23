@@ -3,11 +3,11 @@ package io.elastest.codeurjc.qe.utils;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -100,11 +100,12 @@ public class RestClient {
         temp.setReadable(true);
         temp.setExecutable(false);
 
-        FileOutputStream fos = new FileOutputStream(temp.getAbsolutePath());
-        DataOutputStream outStream = new DataOutputStream(
-                new BufferedOutputStream(fos));
-        outStream.writeUTF(body);
-        outStream.close();
+        BufferedWriter bwr = new BufferedWriter(new FileWriter(temp));
+
+        // write contents of StringBuffer to a file
+        bwr.write(body);
+        bwr.flush();
+        bwr.close();
 
         // Do request
         CloseableHttpClient httpClient = HttpClients.createDefault();
