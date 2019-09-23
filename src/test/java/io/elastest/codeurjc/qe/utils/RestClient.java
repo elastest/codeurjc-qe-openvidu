@@ -152,7 +152,7 @@ public class RestClient {
         response.close();
 
         if (statusCode != 200) {
-            throw new Exception("Error on attach file: Code" + statusCode);
+            throw new Exception("Error on attach file: Code " + statusCode);
         }
 
         return responseEntity;

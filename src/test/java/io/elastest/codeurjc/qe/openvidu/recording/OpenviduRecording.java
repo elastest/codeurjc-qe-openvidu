@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.http.HttpEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -142,6 +141,14 @@ public class OpenviduRecording extends RecordingBaseTest {
         logger.info("Starting browser for user {} ", userId);
 
         String testName = info.getTestMethod().get().getName();
+        int SESSION_ID = 1;
+
+        String publicUrl = OPENVIDU_SUT_URL
+                + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
+
+        String completeUrl = OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl
+                + "&secret=" + OPENVIDU_SECRET + "&sessionId=" + SESSION_ID
+                + "&userId=" + userId;
 
         WebDriver driver;
         DesiredCapabilities capabilities = DesiredCapabilities.chrome();
@@ -178,6 +185,12 @@ public class OpenviduRecording extends RecordingBaseTest {
                 // This flag sets the audio input
                 options.addArguments("--use-file-for-fake-audio-capture="
                         + "/opt/openvidu/fakeaudio.wav");
+            } else {
+                String sutHost = System.getenv("ET_SUT_HOST");
+
+                completeUrl = "https://" + sutHost + ":5000?publicurl=https://"
+                        + sutHost + ":4443/&secret=" + OPENVIDU_SECRET
+                        + "&sessionId=" + SESSION_ID + "&userId=" + userId;
             }
 
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
@@ -196,19 +209,12 @@ public class OpenviduRecording extends RecordingBaseTest {
                 throw new SessionNotCreatedException(msg);
             }
         }
-        int SESSION_ID = 1;
+
         BrowserClient browserClient = new BrowserClient(driver, userId,
                 SESSION_ID);
         browserClientList.add(browserClient);
 
-        String publicUrl = OPENVIDU_SUT_URL
-                + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
-
-        browserClient.getDriver()
-                .get(OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl
-                        + "&secret=" + OPENVIDU_SECRET + "&sessionId="
-                        + SESSION_ID + "&userId=" + userId);
-
+        browserClient.getDriver().get(completeUrl);
         browserClient.startEventPolling(true, false);
 
         try {
