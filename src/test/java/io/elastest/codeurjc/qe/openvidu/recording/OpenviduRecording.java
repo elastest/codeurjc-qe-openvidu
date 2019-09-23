@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -269,7 +270,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                     "File with name {} has been downloaded successfully: {}",
                     fileName, response);
 
-            return response.toString();
+            return EntityUtils.toString(response, "UTF-8");
         }
         return null;
     }
