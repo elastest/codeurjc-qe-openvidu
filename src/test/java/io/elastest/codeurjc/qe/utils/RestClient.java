@@ -20,6 +20,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 
 public class RestClient {
@@ -36,6 +37,8 @@ public class RestClient {
         final int statusCode = response.getStatusLine().getStatusCode();
         logger.info("Response Code: {}", statusCode);
         HttpEntity responseEntity = response.getEntity();
+        logger.info("asdasd {}", EntityUtils.toString(responseEntity, "UTF-8"));
+
         response.close();
 
         if (statusCode != 200) {
