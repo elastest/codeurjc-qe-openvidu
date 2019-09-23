@@ -69,7 +69,7 @@ public class OpenviduRecording extends RecordingBaseTest {
                 firstBrowser.downloadRecording(localRecorderId);
                 TimeUnit.SECONDS.sleep(5);
                 final String fileName = localRecorderId + ".webm";
-                String file = getDownloadedFile(firstBrowser, fileName);
+                byte[] file = getDownloadedFile(firstBrowser, fileName);
                 attachFileToExecution(file, fileName);
 
             }
@@ -236,7 +236,7 @@ public class OpenviduRecording extends RecordingBaseTest {
 
     }
 
-    public String getDownloadedFile(BrowserClient browserClient,
+    public byte[] getDownloadedFile(BrowserClient browserClient,
             String fileName) throws Exception {
         if (EUS_URL != null) {
             logger.info("Getting downloaded file with name {}", fileName);
@@ -252,7 +252,7 @@ public class OpenviduRecording extends RecordingBaseTest {
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
             url += "browserfile/session/" + sessionId.toString() + "/";
 
-            String response;
+            byte[] response;
             try {
                 response = restClient.sendGet(
                         url + folder + "/" + fileName + "?isDirectory=false");
@@ -272,7 +272,7 @@ public class OpenviduRecording extends RecordingBaseTest {
         return null;
     }
 
-    public void attachFileToExecution(String file, String fileName)
+    public void attachFileToExecution(byte[] file, String fileName)
             throws Exception {
         if (ET_ETM_TJOB_ATTACHMENT_API != null) {
             try {

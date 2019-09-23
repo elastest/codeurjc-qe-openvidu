@@ -18,7 +18,7 @@ public class RestClient {
     protected static final Logger logger = getLogger(lookup().lookupClass());
 
     // HTTP GET request
-    public String sendGet(String url) throws Exception {
+    public byte[] sendGet(String url) throws Exception {
         logger.info("Doing get to {}", url);
 
         // Do request
@@ -29,7 +29,7 @@ public class RestClient {
         final int statusCode = response.getStatusLine().getStatusCode();
         logger.info("Response Code: {}", statusCode);
         HttpEntity responseEntity = response.getEntity();
-        String responseBody = EntityUtils.toString(responseEntity);
+        byte[] responseBody = EntityUtils.toByteArray(responseEntity);
         response.close();
 
         if (statusCode != 200) {
@@ -40,7 +40,7 @@ public class RestClient {
     }
 
     public HttpEntity postMultipart(String urlString, String fileNameWithExt,
-            String body) throws Exception {
+            byte[] body) throws Exception {
         logger.info("Doing multipart post to {}", urlString);
 
         // Do request
@@ -49,8 +49,8 @@ public class RestClient {
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 
         // This attaches the file to the POST:
-        builder.addBinaryBody("file", body.getBytes(),
-                ContentType.MULTIPART_FORM_DATA, fileNameWithExt);
+        builder.addBinaryBody("file", body, ContentType.MULTIPART_FORM_DATA,
+                fileNameWithExt);
 
         HttpEntity multipart = builder.build();
         uploadFile.setEntity(multipart);
