@@ -46,7 +46,7 @@ public class OpenviduRecording extends RecordingBaseTest {
         String localRecorderId = null;
         try {
             firstBrowser.getSubscriberStreams2();
-            firstBrowser.getViewerStreams2();
+            firstBrowser.getPublisherStreams();
             JsonArray subscriberStreamIds = firstBrowser.getSubscriberStreams();
             for (JsonElement streamId : subscriberStreamIds) {
                 if (streamId != null) {

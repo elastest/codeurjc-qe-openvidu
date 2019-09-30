@@ -262,8 +262,7 @@ public class BrowserClient {
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
-    
-    
+
     public JsonArray getSubscriberStreams2() throws Exception {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
                 "var result = JSON.stringify(getSubscriberStreams());"
@@ -272,12 +271,12 @@ public class BrowserClient {
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
-    
-    public JsonArray getViewerStreams2() throws Exception {
+
+    public JsonArray getPublisherStreams() throws Exception {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
-                "var result = JSON.stringify(getViewerStreams());"
+                "var result = JSON.stringify(getPublisherStreams());"
                         + "return result;");
-        logger.info("Viewer streams string: {}", streams);
+        logger.info("Publisher streams string: {}", streams);
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
