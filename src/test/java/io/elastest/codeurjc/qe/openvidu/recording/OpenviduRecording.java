@@ -43,15 +43,17 @@ public class OpenviduRecording extends RecordingBaseTest {
 
         // Get streams
         BrowserClient firstBrowser = browserClientList.get(0);
-        List<String> localRecorderIds = new ArrayList<>();
+        String localRecorderId = null;
         try {
+            firstBrowser.getSubscriberStreams2();
+            firstBrowser.getViewerStreams2();
             JsonArray subscriberStreamIds = firstBrowser.getSubscriberStreams();
             for (JsonElement streamId : subscriberStreamIds) {
                 if (streamId != null) {
-                    String localRecorderId = firstBrowser
+                    localRecorderId = firstBrowser
                             .initLocalRecorder(streamId.getAsString());
-                    localRecorderIds.add(localRecorderId);
                     firstBrowser.startRecording(localRecorderId);
+                    break;
                 }
             }
 
@@ -64,15 +66,15 @@ public class OpenviduRecording extends RecordingBaseTest {
                 sleep(1000);
             }
 
-            for (String localRecorderId : localRecorderIds) {
-                firstBrowser.stopRecording(localRecorderId);
-                firstBrowser.downloadRecording(localRecorderId);
-                TimeUnit.SECONDS.sleep(5);
-                final String fileName = localRecorderId + ".webm";
-                byte[] file = getDownloadedFile(firstBrowser, fileName);
-                attachFileToExecution(file, fileName);
+            firstBrowser.stopRecording(localRecorderId);
+            firstBrowser.downloadRecording(localRecorderId);
+            TimeUnit.SECONDS.sleep(5);
+            final String fileName = localRecorderId + ".webm";
 
-            }
+            // TODO remove
+            byte[] file = getDownloadedFile(firstBrowser, fileName);
+            attachFileToExecution(file, fileName);
+
             sleep(20000);
         } catch (Exception e) {
             e.printStackTrace();

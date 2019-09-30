@@ -32,7 +32,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 public class RecordingBaseTest {
     protected static final Logger logger = getLogger(lookup().lookupClass());
 
-    public static int USERS_BY_SESSION = 3;
+    public static int USERS_BY_SESSION = 2;
     public static int MAX_SESSIONS = 1;
 
     public static String OPENVIDU_SECRET = "MY_SECRET";
@@ -66,7 +66,6 @@ public class RecordingBaseTest {
         String openviduSecret = System.getenv("OPENVIDU_SECRET");
         String secondsOfWait = System.getenv("SECONDS_OF_WAIT");
         String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
-        String usersSession = System.getenv("USERS_BY_SESSION");
 
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
@@ -77,10 +76,6 @@ public class RecordingBaseTest {
 
         if (browserPollInterval != null) {
             BROWSER_POLL_INTERVAL = Integer.parseInt(browserPollInterval);
-        }
-
-        if (usersSession != null) {
-            USERS_BY_SESSION = Integer.parseInt(usersSession);
         }
 
     }

@@ -262,6 +262,25 @@ public class BrowserClient {
         return jsonParser.parse(streams).getAsJsonArray();
 
     }
+    
+    
+    public JsonArray getSubscriberStreams2() throws Exception {
+        String streams = (String) ((JavascriptExecutor) driver).executeScript(
+                "var result = JSON.stringify(getSubscriberStreams());"
+                        + "return result;");
+        logger.info("Subscriber Streams2 string: {}", streams);
+        return jsonParser.parse(streams).getAsJsonArray();
+
+    }
+    
+    public JsonArray getViewerStreams2() throws Exception {
+        String streams = (String) ((JavascriptExecutor) driver).executeScript(
+                "var result = JSON.stringify(getViewerStreams());"
+                        + "return result;");
+        logger.info("Viewer streams string: {}", streams);
+        return jsonParser.parse(streams).getAsJsonArray();
+
+    }
 
     public String initLocalRecorder(String streamId) throws Exception {
         try {
