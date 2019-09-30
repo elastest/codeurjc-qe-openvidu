@@ -30,48 +30,43 @@ import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
 import io.elastest.codeurjc.qe.utils.RestClient;
 
-public class OpenviduRecording extends RecordingBaseTest {
+public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
             .newCachedThreadPool();
 
     @Test
-    public void recordAndDownloadSubscriberVideo(TestInfo info)
+    public void webRTCQoEMeter(TestInfo info)
             throws SessionNotCreatedException, TimeoutException, IOException {
         startBrowsers(info);
 
-        // Get streams
+        // Get Videos
         BrowserClient firstBrowser = browserClientList.get(0);
         try {
-            String localRecorderId = null;
-            JsonArray subscriberStreamIds = firstBrowser.getSubscriberStreams();
-            for (JsonElement streamId : subscriberStreamIds) {
-                if (streamId != null) {
-                    localRecorderId = firstBrowser
-                            .initLocalRecorder(streamId.getAsString());
-                    firstBrowser.startRecording(localRecorderId);
-                    break;
-                }
-            }
+            JsonArray subscriberStreamIds = firstBrowser
+                    .getSubscriberStreams2();
+            JsonArray publiserStreamIds = firstBrowser.getPublisherStreams();
 
-            // seconds
-            final int WAIT_TIME = 60;
-            long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
+            String subscriberLocalRecorderId = recordBrowserVideo(firstBrowser,
+                    subscriberStreamIds.get(0));
 
-            // Wait
-            while (System.currentTimeMillis() < endWaitTime) {
-                sleep(1000);
-            }
+            String publisherLocalRecorderId = recordBrowserVideo(firstBrowser,
+                    publiserStreamIds.get(0));
 
-            firstBrowser.stopRecording(localRecorderId);
-            firstBrowser.downloadRecording(localRecorderId);
-            TimeUnit.SECONDS.sleep(5);
-            final String fileName = localRecorderId + ".webm";
+            String subscriberVideo = getVideoPathByLocalRecorderId(
+                    subscriberLocalRecorderId);
+            String publisherVideo = getVideoPathByLocalRecorderId(
+                    publisherLocalRecorderId);
 
-            // TODO remove
-            byte[] file = getDownloadedFile(firstBrowser, fileName);
-            attachFileToExecution(file, fileName);
+            String serviceId = startWebRTCQoEMeter(publisherVideo,
+                    subscriberVideo, firstBrowser).toString();
+
+            // TODO Wait for CSV
+
+            // TODO GetCSV
+
+            // TODO attachFileToExecution(file, fileName);
 
             sleep(20000);
         } catch (Exception e) {
@@ -179,13 +174,13 @@ public class OpenviduRecording extends RecordingBaseTest {
 
                 capabilities.setCapability("awsConfig", awsConfigMap);
 
-                // This flag sets the video input
+                // This flag sets the video input (with padding)
                 options.addArguments("--use-file-for-fake-video-capture="
-                        + "/opt/openvidu/fakevideo.y4m");
+                        + "/opt/openvidu/fakevideo_with_padding.y4m");
                 // This flag sets the audio input
                 options.addArguments("--use-file-for-fake-audio-capture="
                         + "/opt/openvidu/fakeaudio.wav");
-            } else {
+            } else { // Development (docker)
                 String sutHost = System.getenv("ET_SUT_HOST");
 
                 completeUrl = "https://" + sutHost + ":5000?publicurl=https://"
@@ -236,40 +231,56 @@ public class OpenviduRecording extends RecordingBaseTest {
 
     }
 
-    public byte[] getDownloadedFile(BrowserClient browserClient,
-            String fileName) throws Exception {
+    public byte[] startWebRTCQoEMeter(String presenterPath, String viewerPath,
+            BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
-            logger.info("Getting downloaded file with name {}", fileName);
+            logger.info("Starting WebRTC QoE Meter");
             RestClient restClient = new RestClient();
 
             SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
                     .getSessionId();
 
-            String folder = "/home/ubuntu/Downloads";
-
-            // http://eusip:eusport/eus/v1/browserfile/session/sessionID//home/ubuntu/Downloads/filename.ext?isDirectory=false
-
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            url += "browserfile/session/" + sessionId.toString() + "/";
+            url += "session/" + sessionId.toString()
+                    + "/webrtc/qoe/meter/start";
+            url += "?presenterPath=" + presenterPath + "&viewerPath="
+                    + viewerPath;
 
             byte[] response;
-            try {
-                response = restClient.sendGet(
-                        url + folder + "/" + fileName + "?isDirectory=false");
-            } catch (Exception e) {
-                logger.info(
-                        "First attempt to get file with name {} failed. Trying Again.",
-                        fileName);
-                response = restClient.sendGet(url + folder.toLowerCase() + "/"
-                        + fileName + "?isDirectory=false");
-            }
+            response = restClient.sendGet(url);
 
-            logger.info("File with name {} has been downloaded successfully",
-                    fileName);
+            logger.info("Started WebRTC QoE Meter for Sessions {} successfully",
+                    sessionId);
 
             return response;
         }
         return null;
+    }
+
+    private String recordBrowserVideo(BrowserClient browser,
+            JsonElement streamId) throws Exception {
+        String localRecorderId = null;
+
+        localRecorderId = browser.initLocalRecorder(streamId.getAsString());
+        browser.startRecording(localRecorderId);
+
+        // seconds
+        final int WAIT_TIME = 60;
+        long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
+
+        // Wait
+        while (System.currentTimeMillis() < endWaitTime) {
+            sleep(1000);
+        }
+
+        browser.stopRecording(localRecorderId);
+
+        return localRecorderId;
+    }
+
+    public String getVideoPathByLocalRecorderId(String localRecorderId) {
+        final String fileName = localRecorderId + ".webm";
+        return "/home/ubuntu/Downloads/" + fileName;
     }
 
     public void attachFileToExecution(byte[] file, String fileName)
