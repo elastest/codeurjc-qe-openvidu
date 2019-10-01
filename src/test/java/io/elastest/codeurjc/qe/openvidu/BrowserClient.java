@@ -287,6 +287,10 @@ public class BrowserClient {
             String localRecorderId = (String) ((JavascriptExecutor) driver)
                     .executeScript("var localRecorderId = initLocalRecorder('"
                             + streamId + "');" + "return localRecorderId;");
+            if (localRecorderId == null) {
+                throw new Exception("Local recorder ID from streamId "
+                        + streamId + " is null");
+            }
             logger.info(
                     "Local recorder from streamId '{}' has been initialized with ID '{}'",
                     streamId, localRecorderId);
