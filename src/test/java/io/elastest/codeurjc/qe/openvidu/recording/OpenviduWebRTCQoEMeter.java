@@ -157,7 +157,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
         try {
             logger.info("Waiting for all recordings are done");
-            waitForSessionReadyLatch.await();
+            waitForRecording.await();
         } catch (AbortedException e) {
             logger.error("Some recording has failed: {}", e.getMessage());
             Assertions.fail("Some recording has failed: " + e.getMessage());
