@@ -49,8 +49,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         try {
 
             // Get Subscriber/Publisher streamIds
-            JsonArray subscriberStreamIds = firstBrowser
-                    .getSubscriberStreams2();
+            JsonArray subscriberStreamIds = firstBrowser.getSubscriberStreams();
             JsonArray publiserStreamIds = firstBrowser.getPublisherStreams();
 
             // Record and download Subscriber/Publisher videos
