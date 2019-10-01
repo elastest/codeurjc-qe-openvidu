@@ -49,7 +49,7 @@ public class RecordingBaseTest {
 
     protected static JsonObject awsConfig;
 
-    protected static final String AWS_AMI_ID = "ami-0a5855fcb6c0ae41c";
+    protected static final String AWS_AMI_ID = "ami-0bfc646d9bb6ad37c";
     protected static final int AWS_NUM_INSTANCES = 1;
     protected static final String AWS_TAG_SPECIFICATIONS = "[ { \"resourceType\":\"instance\", \"tags\":[ {\"key\":\"Type\", \"value\":\"OpenViduLoadTest\"} ] } ]";
     protected static final String AWS_INSTANCE_TYPE = "t2.xlarge";
