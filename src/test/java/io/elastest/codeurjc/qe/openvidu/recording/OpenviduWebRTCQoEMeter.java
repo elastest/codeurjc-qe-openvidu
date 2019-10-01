@@ -1,6 +1,7 @@
 package io.elastest.codeurjc.qe.openvidu.recording;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -21,6 +23,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -44,29 +47,45 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         // Get Videos
         BrowserClient firstBrowser = browserClientList.get(0);
         try {
+
+            // Get Subscriber/Publisher streamIds
             JsonArray subscriberStreamIds = firstBrowser
                     .getSubscriberStreams2();
             JsonArray publiserStreamIds = firstBrowser.getPublisherStreams();
 
-            String subscriberLocalRecorderId = recordBrowserVideo(firstBrowser,
-                    subscriberStreamIds.get(0));
+            // Record and download Subscriber/Publisher videos
+            String subscriberLocalRecorderId = recordAndDownloadBrowserVideo(
+                    firstBrowser, subscriberStreamIds.get(0));
 
-            String publisherLocalRecorderId = recordBrowserVideo(firstBrowser,
-                    publiserStreamIds.get(0));
+            String publisherLocalRecorderId = recordAndDownloadBrowserVideo(
+                    firstBrowser, publiserStreamIds.get(0));
 
+            // Get Subscriber/Publisher video paths
             String subscriberVideo = getVideoPathByLocalRecorderId(
                     subscriberLocalRecorderId);
             String publisherVideo = getVideoPathByLocalRecorderId(
                     publisherLocalRecorderId);
 
-            String serviceId = startWebRTCQoEMeter(publisherVideo,
+            // Start WebRTCQoEMeter service in EUS
+            String qoeServiceId = startWebRTCQoEMeter(publisherVideo,
                     subscriberVideo, firstBrowser).toString();
 
-            // TODO Wait for CSV
+            // Wait for CSV and Get
+            List<InputStream> csvList = waitForCSV(qoeServiceId, firstBrowser);
 
-            // TODO GetCSV
+            if (csvList != null && csvList.size() > 0) {
+                int count = 1;
+                for (InputStream csvFile : csvList) {
+                    byte[] csvFileAsByteArr = IOUtils.toByteArray(csvFile);
 
-            // TODO attachFileToExecution(file, fileName);
+                    attachFileToExecution(csvFileAsByteArr,
+                            "csv-" + count + ".csv");
+                    count++;
+                }
+
+            } else {
+                Assertions.fail("Csv files List is null or empty");
+            }
 
             sleep(20000);
         } catch (Exception e) {
@@ -249,7 +268,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             byte[] response;
             response = restClient.sendGet(url);
 
-            logger.info("Started WebRTC QoE Meter for Sessions {} successfully",
+            logger.info("Started WebRTC QoE Meter for Session {} successfully",
                     sessionId);
 
             return response;
@@ -257,7 +276,60 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         return null;
     }
 
-    private String recordBrowserVideo(BrowserClient browser,
+    @SuppressWarnings("unchecked")
+    public List<InputStream> waitForCSV(String qoeServiceId,
+            BrowserClient browserClient) throws Exception {
+        if (EUS_URL != null) {
+            // 20min
+            int timeoutSeconds = 1200;
+            long endWaitTime = System.currentTimeMillis()
+                    + timeoutSeconds * 1000;
+
+            logger.info(
+                    "Waiting for CSV generated in WebRTC QoE Meter (timeout {}s)",
+                    timeoutSeconds);
+            RestClient restClient = new RestClient();
+
+            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
+                    .getSessionId();
+
+            String urlPrefix = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
+            urlPrefix += "session/" + sessionId.toString()
+                    + "/webrtc/qoe/meter/" + qoeServiceId;
+            String url = urlPrefix + "/csv/isgenerated";
+
+            String response;
+
+            do {
+                response = restClient.sendGet(url).toString();
+                logger.debug("CSV not generated yet, waiting...");
+                sleep(2000);
+            } while (System.currentTimeMillis() < endWaitTime
+                    && !"true".equals(response));
+            logger.info("CSV Generated for Session {} successfully", sessionId);
+
+            url = urlPrefix + "/csv";
+            response = restClient.sendGet(url).toString();
+
+            List<InputStream> csvFiles = null;
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(
+                        DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                        false);
+
+                csvFiles = (List<InputStream>) objectMapper.readValue(response,
+                        List.class);
+                return csvFiles;
+            } catch (IOException e) {
+                throw new Exception(
+                        "Error during CSV list conversion: " + e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private String recordAndDownloadBrowserVideo(BrowserClient browser,
             JsonElement streamId) throws Exception {
         String localRecorderId = null;
 
@@ -274,6 +346,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         }
 
         browser.stopRecording(localRecorderId);
+
+        browser.downloadRecording(localRecorderId);
 
         return localRecorderId;
     }
