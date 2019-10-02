@@ -74,7 +74,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             // Start WebRTCQoEMeter service in EUS
             String qoeServiceId = startWebRTCQoEMeter(
                     user1VideoPathInUser2Browser, user2VideoPathInUser1Browser,
-                    user1Browser, user2Browser).toString();
+                    user1Browser, user2Browser);
 
             // Wait for CSV and Get
             List<InputStream> csvList = waitForCSV(qoeServiceId, user1Browser);
@@ -308,7 +308,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
     }
 
-    public byte[] startWebRTCQoEMeter(String presenterPath, String viewerPath,
+    public String startWebRTCQoEMeter(String presenterPath, String viewerPath,
             BrowserClient user1BrowserClient, BrowserClient user2BrowserClient)
             throws Exception {
         if (EUS_URL != null) {
@@ -332,11 +332,13 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             byte[] response;
             response = restClient.sendGet(url);
 
+            String id = new String(response);
+
             logger.info(
                     "Started WebRTC QoE Meter for Sessions {} and {} successfully! Id {}",
-                    user1SessionId, user2SessionId, response);
+                    user1SessionId, user2SessionId, id);
 
-            return response;
+            return id;
         }
         return null;
     }
