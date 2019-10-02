@@ -156,8 +156,9 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         }
 
         try {
-            logger.info("Waiting for all recordings are done");
+            logger.info("Waiting for all recordings are done and downloaded");
             waitForRecording.await();
+            logger.info("All recordings are done!");
         } catch (AbortedException e) {
             logger.error("Some recording has failed: {}", e.getMessage());
             Assertions.fail("Some recording has failed: " + e.getMessage());
@@ -332,8 +333,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             response = restClient.sendGet(url);
 
             logger.info(
-                    "Started WebRTC QoE Meter for Sessions {} and {} successfully",
-                    user1SessionId, user2SessionId);
+                    "Started WebRTC QoE Meter for Sessions {} and {} successfully! Id {}",
+                    user1SessionId, user2SessionId, response);
 
             return response;
         }
