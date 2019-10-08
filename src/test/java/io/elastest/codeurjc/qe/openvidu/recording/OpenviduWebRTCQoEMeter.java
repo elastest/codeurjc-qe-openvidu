@@ -416,7 +416,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
     public String getVideoPathByLocalRecorderId(String localRecorderId) {
         final String fileName = localRecorderId + ".webm";
-        return "/home/ubuntu/Downloads/" + fileName;
+        return "/home/ubuntu/downloads/" + fileName;
     }
 
     public void attachFileToExecution(byte[] file, String fileName)
