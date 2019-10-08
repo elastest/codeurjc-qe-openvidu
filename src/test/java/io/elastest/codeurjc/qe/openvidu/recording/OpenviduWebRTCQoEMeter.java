@@ -401,7 +401,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         browser.startRecording(localRecorderId);
 
         // seconds
-        final int WAIT_TIME = 60;
+        final int WAIT_TIME = 30;
         long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
 
         // Wait
