@@ -370,7 +370,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             do {
                 response = restClient.sendGet(url).toString();
                 logger.debug("CSV not generated yet, waiting...");
-                sleep(2000);
+                sleep(3500);
             } while (System.currentTimeMillis() < endWaitTime
                     && !"true".equals(response));
             logger.info("CSV Generated for Session {} successfully", sessionId);
