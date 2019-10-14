@@ -378,7 +378,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             url = urlPrefix + "/csv";
             response = new String(restClient.sendGet(url));
-            logger.debug("CSV RESPONSE: {}", response);
+            logger.info("CSV RESPONSE: {}", response);
             List<InputStream> csvFiles = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
