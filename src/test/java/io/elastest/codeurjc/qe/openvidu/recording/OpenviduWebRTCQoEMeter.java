@@ -369,7 +369,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             do {
                 response = new String(restClient.sendGet(url));
-                logger.debug("CSV not generated yet, waiting... Response: {}",
+                logger.info("CSV not generated yet, waiting... Response: {}",
                         response);
                 sleep(3500);
             } while (System.currentTimeMillis() < endWaitTime
@@ -378,7 +378,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             url = urlPrefix + "/csv";
             response = new String(restClient.sendGet(url));
-
+            logger.debug("CSV RESPONSE: {}", response);
             List<InputStream> csvFiles = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
