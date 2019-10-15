@@ -21,6 +21,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
@@ -382,7 +383,9 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                         false);
 
                 csvFiles = (List<byte[]>) objectMapper.readValue(response,
-                        List.class);
+                        new TypeReference<List<byte[]>>() {
+                        });
+
                 return csvFiles;
             } catch (IOException e) {
                 throw new Exception(
