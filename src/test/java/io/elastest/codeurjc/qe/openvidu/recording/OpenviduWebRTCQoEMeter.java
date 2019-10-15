@@ -1,7 +1,6 @@
 package io.elastest.codeurjc.qe.openvidu.recording;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -77,15 +75,12 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     user1Browser, user2Browser);
 
             // Wait for CSV and Get
-            List<InputStream> csvList = waitForCSV(qoeServiceId, user1Browser);
+            List<byte[]> csvList = waitForCSV(qoeServiceId, user1Browser);
 
             if (csvList != null && csvList.size() > 0) {
                 int count = 1;
-                for (InputStream csvFile : csvList) {
-                    byte[] csvFileAsByteArr = IOUtils.toByteArray(csvFile);
-
-                    attachFileToExecution(csvFileAsByteArr,
-                            "csv-" + count + ".csv");
+                for (byte[] csvFile : csvList) {
+                    attachFileToExecution(csvFile, "csv-" + count + ".csv");
                     count++;
                 }
 
@@ -344,7 +339,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
     }
 
     @SuppressWarnings("unchecked")
-    public List<InputStream> waitForCSV(String qoeServiceId,
+    public List<byte[]> waitForCSV(String qoeServiceId,
             BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
             // 20min
@@ -379,14 +374,14 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             url = urlPrefix + "/csv";
             response = new String(restClient.sendGet(url));
             logger.info("CSV RESPONSE: {}", response);
-            List<InputStream> csvFiles = null;
+            List<byte[]> csvFiles = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.configure(
                         DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                         false);
 
-                csvFiles = (List<InputStream>) objectMapper.readValue(response,
+                csvFiles = (List<byte[]>) objectMapper.readValue(response,
                         List.class);
                 return csvFiles;
             } catch (IOException e) {
