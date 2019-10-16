@@ -97,7 +97,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             if (metrics != null && metrics.size() > 0) {
                 int count = 1;
                 for (Double metric : metrics) {
-                    attachFileToExecution(doubleToByteArray(metric),
+                    attachFileToExecution(String.valueOf(metric).getBytes(),
                             "metric-" + count + ".txt");
                     count++;
                 }
@@ -490,13 +490,5 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 throw e;
             }
         }
-    }
-
-    private byte[] doubleToByteArray(final double i) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(bos);
-        dos.writeDouble(i);
-        dos.flush();
-        return bos.toByteArray();
     }
 }
