@@ -104,17 +104,16 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 Assertions.fail("Metric files List is null or empty");
             }
 
-            // For last, get and attach original videos
-
-            byte[] originalUser1Video = user1Browser.getFile(EUS_URL,
-                    fakeVideoWithPaddingPath);
-            attachFileToExecution(originalUser1Video,
-                    "original-user1-video.y4m");
-
-            byte[] originalUser2Video = user2Browser.getFile(EUS_URL,
-                    fakeVideoWithPaddingPath);
-            attachFileToExecution(originalUser2Video,
-                    "original-user2-video.y4m");
+//            // For last, get and attach original videos
+//            byte[] originalUser1Video = user1Browser.getFile(EUS_URL,
+//                    fakeVideoWithPaddingPath);
+//            attachFileToExecution(originalUser1Video,
+//                    "original-user1-video.y4m");
+//
+//            byte[] originalUser2Video = user2Browser.getFile(EUS_URL,
+//                    fakeVideoWithPaddingPath);
+//            attachFileToExecution(originalUser2Video,
+//                    "original-user2-video.y4m");
 
             sleep(20000);
         } catch (Exception e) {
