@@ -393,7 +393,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 response = new String(restClient.sendGet(url));
                 logger.info("CSV not generated yet, waiting... Response: {}",
                         response);
-                sleep(3500);
+                sleep(4500);
             } while (System.currentTimeMillis() < endWaitTime
                     && !"true".equals(response));
             logger.info("CSV Generated for Session {} successfully", sessionId);
@@ -425,7 +425,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
     public List<Double> getMetric(String qoeServiceId,
             BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
-            logger.info("Getting for metric generated in WebRTC QoE Meter");
+            logger.info("Getting metric generated in WebRTC QoE Meter");
             RestClient restClient = new RestClient();
 
             SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())

@@ -354,8 +354,7 @@ public class BrowserClient {
                     completePath, sessionId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
-            url += hubUrl + "browserfile/session/" + sessionId + "/"
-                    + completePath;
+            url += "browserfile/session/" + sessionId + "/" + completePath;
             url += "?isDirectory=false";
 
             return restClient.sendGet(url);
