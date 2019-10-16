@@ -32,6 +32,7 @@ import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedExcep
 import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
+    final String fakeVideoWithPaddingPath = "/opt/openvidu/fakevideo_with_padding.y4m";
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
@@ -46,7 +47,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         BrowserClient user1Browser = browserClientList.get(0);
         BrowserClient user2Browser = browserClientList.get(1);
         try {
-
             // Get User1/User2 streamIds
             JsonArray user1SubscriberStreamIds = user1Browser
                     .getSubscriberStreams();
@@ -103,6 +103,18 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             } else {
                 Assertions.fail("Metric files List is null or empty");
             }
+
+            // For last, get and attach original videos
+
+            byte[] originalUser1Video = user1Browser.getFile(EUS_URL,
+                    fakeVideoWithPaddingPath);
+            attachFileToExecution(originalUser1Video,
+                    "original-user1-video.y4m");
+
+            byte[] originalUser2Video = user2Browser.getFile(EUS_URL,
+                    fakeVideoWithPaddingPath);
+            attachFileToExecution(originalUser2Video,
+                    "original-user2-video.y4m");
 
             sleep(20000);
         } catch (Exception e) {
@@ -264,7 +276,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
                 // This flag sets the video input (with padding)
                 options.addArguments("--use-file-for-fake-video-capture="
-                        + "/opt/openvidu/fakevideo_with_padding.y4m");
+                        + fakeVideoWithPaddingPath);
                 // This flag sets the audio input
                 options.addArguments("--use-file-for-fake-audio-capture="
                         + "/opt/openvidu/fakeaudio.wav");
@@ -340,8 +352,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             url += "&viewerPath=" + viewerPath;
             url += "&viewerSessionId=" + user2SessionId;
 
-            byte[] response;
-            response = restClient.sendGet(url);
+            byte[] response = restClient.sendGet(url);
 
             String id = new String(response);
 

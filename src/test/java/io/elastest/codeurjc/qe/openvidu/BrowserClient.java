@@ -16,12 +16,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.remote.SessionId;
 import org.slf4j.Logger;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class BrowserClient {
     final Logger logger = getLogger(lookup().lookupClass());
@@ -339,5 +343,23 @@ public class BrowserClient {
                     + localRecorderId + ": " + e.getMessage();
             throw new Exception(msg);
         }
+    }
+
+    public byte[] getFile(String hubUrl, String completePath) throws Exception {
+        if (hubUrl != null) {
+            RestClient restClient = new RestClient();
+            SessionId sessionId = ((RemoteWebDriver) getDriver())
+                    .getSessionId();
+            logger.info("Getting file {} from browser with session id {}",
+                    completePath, sessionId);
+
+            String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            url += hubUrl + "browserfile/session/" + sessionId + "/"
+                    + completePath;
+            url += "?isDirectory=false";
+
+            return restClient.sendGet(url);
+        }
+        return null;
     }
 }
