@@ -1,7 +1,5 @@
 package io.elastest.codeurjc.qe.openvidu.recording;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
