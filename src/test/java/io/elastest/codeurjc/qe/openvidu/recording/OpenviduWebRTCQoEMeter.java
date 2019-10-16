@@ -1,5 +1,7 @@
 package io.elastest.codeurjc.qe.openvidu.recording;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -87,6 +89,21 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             } else {
                 Assertions.fail("Csv files List is null or empty");
+            }
+
+            // Get Metric
+            List<Double> metrics = getMetric(qoeServiceId, user1Browser);
+
+            if (metrics != null && metrics.size() > 0) {
+                int count = 1;
+                for (Double metric : metrics) {
+                    attachFileToExecution(doubleToByteArray(metric),
+                            "metric-" + count + ".txt");
+                    count++;
+                }
+
+            } else {
+                Assertions.fail("Metric files List is null or empty");
             }
 
             sleep(20000);
@@ -395,6 +412,43 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Double> getMetric(String qoeServiceId,
+            BrowserClient browserClient) throws Exception {
+        if (EUS_URL != null) {
+            logger.info("Getting for metric generated in WebRTC QoE Meter");
+            RestClient restClient = new RestClient();
+
+            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
+                    .getSessionId();
+
+            String urlPrefix = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
+            urlPrefix += "session/" + sessionId.toString()
+                    + "/webrtc/qoe/meter/" + qoeServiceId;
+
+            String url = urlPrefix + "/metric";
+            String response = new String(restClient.sendGet(url));
+            logger.info("CSV RESPONSE: {}", response);
+            List<Double> metrics = null;
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(
+                        DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                        false);
+
+                metrics = (List<Double>) objectMapper.readValue(response,
+                        new TypeReference<List<Double>>() {
+                        });
+
+                return metrics;
+            } catch (IOException e) {
+                throw new Exception(
+                        "Error during CSV list conversion: " + e.getMessage());
+            }
+        }
+        return null;
+    }
+
     private void recordAndDownloadBrowserVideo(BrowserClient browser,
             String localRecorderId) throws Exception {
         browser.startRecording(localRecorderId);
@@ -436,5 +490,13 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 throw e;
             }
         }
+    }
+
+    private byte[] doubleToByteArray(final double i) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos);
+        dos.writeDouble(i);
+        dos.flush();
+        return bos.toByteArray();
     }
 }
