@@ -3,6 +3,8 @@ package io.elastest.codeurjc.qe.openvidu;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.io.IOUtils;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -369,14 +372,32 @@ public class BrowserClient {
         if (hubUrl != null) {
             SessionId sessionId = ((RemoteWebDriver) getDriver())
                     .getSessionId();
-            logger.info("Uploading file {} to browser with session id {}",
+            logger.info(
+                    "Starting upload of file {} to browser with session id {}",
                     fileName, sessionId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += "browserfile/session/" + sessionId;
             url += "?path=" + completeFilePath;
 
-            restClient.postMultipart(url, fileName, file);
+            ByteArrayOutputStream bao = new ByteArrayOutputStream();
+
+            byte[] buff = new byte[8000];
+            int bytesRead = 0;
+
+            while ((bytesRead = file.read(buff)) != -1) {
+                bao.write(buff, 0, bytesRead);
+            }
+
+            byte[] data = bao.toByteArray();
+
+            ByteArrayInputStream bin = new ByteArrayInputStream(data);
+
+            logger.info(
+                    "File {} for browser with session id {} converted to byte array!",
+                    fileName, sessionId);
+
+            restClient.postMultipart(url, fileName, IOUtils.toByteArray(bin));
         }
     }
 }
