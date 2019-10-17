@@ -3,9 +3,11 @@ package io.elastest.codeurjc.qe.openvidu;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -380,24 +382,36 @@ public class BrowserClient {
             url += "browserfile/session/" + sessionId;
             url += "?path=" + completeFilePath;
 
-            ByteArrayOutputStream bao = new ByteArrayOutputStream();
+            String folderPath = "/tmp/" + sessionId + "/";
+            File folder = new File(folderPath);
 
-            byte[] buff = new byte[8000];
-            int bytesRead = 0;
-
-            while ((bytesRead = file.read(buff)) != -1) {
-                bao.write(buff, 0, bytesRead);
+            if (!folder.exists()) {
+                logger.debug("Try to create folder structure: {}", folderPath);
+                logger.info("Creating folder at {}.", folder.getAbsolutePath());
+                boolean created = folder.mkdirs();
+                if (!created) {
+                    logger.error("Folder does not created at {}.", folderPath);
+                    return;
+                }
+                logger.info("Folder created at {}.", folderPath);
             }
+            File targetFile = new File(folder + fileName);
 
-            byte[] data = bao.toByteArray();
+            OutputStream outStream = new FileOutputStream(targetFile);
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(data);
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = file.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            outStream.close();
+            FileInputStream input = new FileInputStream(targetFile);
 
             logger.info(
                     "File {} for browser with session id {} converted to byte array!",
                     fileName, sessionId);
 
-            restClient.postMultipart(url, fileName, IOUtils.toByteArray(bin));
+            restClient.postMultipart(url, fileName, IOUtils.toByteArray(input));
         }
     }
 }
