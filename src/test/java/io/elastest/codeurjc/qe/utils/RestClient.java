@@ -3,6 +3,8 @@ package io.elastest.codeurjc.qe.utils;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.InputStream;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -41,6 +43,36 @@ public class RestClient {
 
     public HttpEntity postMultipart(String urlString, String fileNameWithExt,
             byte[] body) throws Exception {
+        logger.info("Doing multipart post to {}", urlString);
+
+        // Do request
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost uploadFile = new HttpPost(urlString);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+
+        // This attaches the file to the POST:
+        builder.addBinaryBody("file", body, ContentType.MULTIPART_FORM_DATA,
+                fileNameWithExt);
+
+        HttpEntity multipart = builder.build();
+        uploadFile.setEntity(multipart);
+
+        CloseableHttpResponse response = httpClient.execute(uploadFile);
+
+        final int statusCode = response.getStatusLine().getStatusCode();
+        logger.info("Response Code: {}", statusCode);
+        HttpEntity responseEntity = response.getEntity();
+        response.close();
+
+        if (statusCode != 200) {
+            throw new Exception("Error on attach file: Code " + statusCode);
+        }
+
+        return responseEntity;
+    }
+
+    public HttpEntity postMultipart(String urlString, String fileNameWithExt,
+            InputStream body) throws Exception {
         logger.info("Doing multipart post to {}", urlString);
 
         // Do request

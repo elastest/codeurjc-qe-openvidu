@@ -3,6 +3,7 @@ package io.elastest.codeurjc.qe.openvidu;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -29,6 +30,7 @@ import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class BrowserClient {
     final Logger logger = getLogger(lookup().lookupClass());
+    RestClient restClient;
 
     private Thread pollingThread;
     private WebDriver driver;
@@ -51,6 +53,7 @@ public class BrowserClient {
         this.eventQueue = new ConcurrentLinkedQueue<JsonObject>();
         this.numEvents = new ConcurrentHashMap<>();
         this.eventCountdowns = new ConcurrentHashMap<>();
+        this.restClient = new RestClient();
     }
 
     public Thread getPollingThread() {
@@ -347,7 +350,6 @@ public class BrowserClient {
 
     public byte[] getFile(String hubUrl, String completePath) throws Exception {
         if (hubUrl != null) {
-            RestClient restClient = new RestClient();
             SessionId sessionId = ((RemoteWebDriver) getDriver())
                     .getSessionId();
             logger.info("Getting file {} from browser with session id {}",
@@ -360,5 +362,21 @@ public class BrowserClient {
             return restClient.sendGet(url);
         }
         return null;
+    }
+
+    public void uploadFile(String hubUrl, InputStream file,
+            String completeFilePath, String fileName) throws Exception {
+        if (hubUrl != null) {
+            SessionId sessionId = ((RemoteWebDriver) getDriver())
+                    .getSessionId();
+            logger.info("Uploading file {} to browser with session id {}",
+                    fileName, sessionId);
+
+            String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            url += "browserfile/session/" + sessionId;
+            url += "?path=" + completeFilePath;
+
+            restClient.postMultipart(url, fileName, file);
+        }
     }
 }

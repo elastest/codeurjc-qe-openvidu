@@ -1,6 +1,7 @@
 package io.elastest.codeurjc.qe.openvidu.recording;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +33,15 @@ import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedExcep
 import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
-    final String fakeVideoWithPaddingPath = "/opt/openvidu/fakevideo_with_padding.y4m";
+    final String fakeResourcesPathInBrowser = "/opt/openvidu/";
+    final String fakeVideoWithPaddingName = "fakevideo_with_padding2.y4m";
+    final String fakeAudioWithPaddingName = "fakeaudio_with_padding.y4m";
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
             .newCachedThreadPool();
+
+    final RestClient restClient = new RestClient();
 
     @Test
     public void webRTCQoEMeter(TestInfo info)
@@ -104,16 +109,16 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 Assertions.fail("Metric files List is null or empty");
             }
 
-//            // For last, get and attach original videos
-//            byte[] originalUser1Video = user1Browser.getFile(EUS_URL,
-//                    fakeVideoWithPaddingPath);
-//            attachFileToExecution(originalUser1Video,
-//                    "original-user1-video.y4m");
-//
-//            byte[] originalUser2Video = user2Browser.getFile(EUS_URL,
-//                    fakeVideoWithPaddingPath);
-//            attachFileToExecution(originalUser2Video,
-//                    "original-user2-video.y4m");
+            // // For last, get and attach original videos
+            // byte[] originalUser1Video = user1Browser.getFile(EUS_URL,
+            // fakeVideoWithPaddingPath);
+            // attachFileToExecution(originalUser1Video,
+            // "original-user1-video.y4m");
+            //
+            // byte[] originalUser2Video = user2Browser.getFile(EUS_URL,
+            // fakeVideoWithPaddingPath);
+            // attachFileToExecution(originalUser2Video,
+            // "original-user2-video.y4m");
 
             sleep(20000);
         } catch (Exception e) {
@@ -275,10 +280,12 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
                 // This flag sets the video input (with padding)
                 options.addArguments("--use-file-for-fake-video-capture="
-                        + fakeVideoWithPaddingPath);
+                        + fakeResourcesPathInBrowser
+                        + fakeVideoWithPaddingName);
                 // This flag sets the audio input
                 options.addArguments("--use-file-for-fake-audio-capture="
-                        + "/opt/openvidu/fakeaudio.wav");
+                        + fakeResourcesPathInBrowser
+                        + fakeAudioWithPaddingName);
             } else { // Development (docker)
                 String sutHost = System.getenv("ET_SUT_HOST");
 
@@ -308,6 +315,14 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 SESSION_ID);
         browserClientList.add(browserClient);
 
+        try {
+            uploadFakeResourcesForTest(browserClient);
+        } catch (Exception e) {
+            String msg = "Error on upload fake resource for test on user "
+                    + userId + " session " + SESSION_ID + ": " + e.getMessage();
+            throw new IOException(msg);
+        }
+
         browserClient.getDriver().get(completeUrl);
         browserClient.startEventPolling(true, false);
 
@@ -335,7 +350,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             throws Exception {
         if (EUS_URL != null) {
             logger.info("Starting WebRTC QoE Meter");
-            RestClient restClient = new RestClient();
 
             SessionId user1SessionId = ((RemoteWebDriver) user1BrowserClient
                     .getDriver()).getSessionId();
@@ -376,7 +390,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             logger.info(
                     "Waiting for CSV generated in WebRTC QoE Meter (timeout {}s)",
                     timeoutSeconds);
-            RestClient restClient = new RestClient();
 
             SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
                     .getSessionId();
@@ -425,7 +438,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
             logger.info("Getting metric generated in WebRTC QoE Meter");
-            RestClient restClient = new RestClient();
 
             SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
                     .getSessionId();
@@ -462,7 +474,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         browser.startRecording(localRecorderId);
 
         // seconds
-        final int WAIT_TIME = 30;
+        final int WAIT_TIME = 60;
         long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
 
         // Wait
@@ -475,6 +487,29 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         browser.downloadRecording(localRecorderId);
     }
 
+    public void uploadFakeResourcesForTest(BrowserClient browser)
+            throws Exception {
+
+        URL videoUrl = new URL(
+                "https://download.wetransfer.com//eu2/40c7358ca9c3c46bb6efbefad486461020191017120221/57d6652b1e7dbeb45aa49ca5745a853da49633e7/fakevideo_with_padding2.y4m?cf=y&token=eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzEzMTQ0MzAsInVuaXF1ZSI6IjQwYzczNThjYTljM2M0NmJiNmVmYmVmYWQ0ODY0NjEwMjAxOTEwMTcxMjAyMjEiLCJmaWxlbmFtZSI6ImZha2V2aWRlb193aXRoX3BhZGRpbmcyLnk0bSIsImhvdCI6ZmFsc2UsImJ5dGVzX2VzdGltYXRlZCI6NTk3MjA0NjM2LCJ3YXliaWxsX3VybCI6Imh0dHA6Ly9wcm9kdWN0aW9uLmJhY2tlbmQuc2VydmljZS5ldS13ZXN0LTEud3Q6OTI5Mi93YXliaWxsL3YxL2MxMjZhZDE5NWY4OTg5YThiMDczM2EyMjY4MjZmYjU5ZmI4NjE5M2VlOWZkOGIwYmI4NzdjNjIxNjVjZTIwNTM4MTY2NTAxN2I3N2JhZTM2NTcwMzY0YTk3OTE5ODIzMThjYmEwZjM2YTQyOGNkZGM4MjUwMzBhNjA2OWFkM2IyIiwiY2FsbGJhY2siOiJ7XCJmb3JtZGF0YVwiOntcImFjdGlvblwiOlwiaHR0cDovL3Byb2R1Y3Rpb24uZnJvbnRlbmQuc2VydmljZS5ldS13ZXN0LTEud3Q6MzAwMC9hcGkvYmFja2VuZC90cmFuc2ZlcnMvNDBjNzM1OGNhOWMzYzQ2YmI2ZWZiZWZhZDQ4NjQ2MTAyMDE5MTAxNzEyMDIyMS9kb3dubG9hZHMvNzUzMzk2MzIzMC9jb21wbGV0ZWQvYjBiYzM4MWQ1NWU5MzFhYmViZDM5NWJkODEyYmU4MzgyMDE5MTAxNzEyMDIyMVwifSxcImZvcm1cIjp7XCJzdGF0dXNcIjpbXCJwYXJhbVwiLFwic3RhdHVzXCJdLFwiZG93bmxvYWRfaWRcIjpcIjc1MzM5NjMyMzBcIn19In0.fjybX27BdcscVsUptQ4STRKDUt4eaUivyXn7z75aNbY");
+        InputStream video = videoUrl.openStream();
+
+        URL audioUrl = new URL(
+                "https://download.wetransfer.com//eu2/40c7358ca9c3c46bb6efbefad486461020191017120221/5c8db79163432ad62b337454501e08a3a77ec038/fakeaudio_with_padding.wav?cf=y&token=eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzEzMjgyMjYsInVuaXF1ZSI6IjQwYzczNThjYTljM2M0NmJiNmVmYmVmYWQ0ODY0NjEwMjAxOTEwMTcxMjAyMjEiLCJmaWxlbmFtZSI6ImZha2VhdWRpb193aXRoX3BhZGRpbmcud2F2IiwiaG90IjpmYWxzZSwiYnl0ZXNfZXN0aW1hdGVkIjo5NTI3Mzc0LCJ3YXliaWxsX3VybCI6Imh0dHA6Ly9wcm9kdWN0aW9uLmJhY2tlbmQuc2VydmljZS5ldS13ZXN0LTEud3Q6OTI5Mi93YXliaWxsL3YxL2M5N2EzYTlmNjQ5Y2U1YjBhNDY0NGViYjAxM2Q3NmY4ZjAxYWI3Y2Y5ODg5YTllYzJkODA1ZmU5NTk0NzZkY2NkNTI4NTZjYmFiZDRjMjJkMmFiNDE5NjFiY2Y2MGJjMjFhNDFmM2JlODE5YWY4NTYxZWU4YzUzMDBhZmIyNzhhIiwiY2FsbGJhY2siOiJ7XCJmb3JtZGF0YVwiOntcImFjdGlvblwiOlwiaHR0cDovL3Byb2R1Y3Rpb24uZnJvbnRlbmQuc2VydmljZS5ldS13ZXN0LTEud3Q6MzAwMC9hcGkvYmFja2VuZC90cmFuc2ZlcnMvNDBjNzM1OGNhOWMzYzQ2YmI2ZWZiZWZhZDQ4NjQ2MTAyMDE5MTAxNzEyMDIyMS9kb3dubG9hZHMvNzUzMzk2MjYyNS9jb21wbGV0ZWQvYjBiYzM4MWQ1NWU5MzFhYmViZDM5NWJkODEyYmU4MzgyMDE5MTAxNzEyMDIyMVwifSxcImZvcm1cIjp7XCJzdGF0dXNcIjpbXCJwYXJhbVwiLFwic3RhdHVzXCJdLFwiZG93bmxvYWRfaWRcIjpcIjc1MzM5NjI2MjVcIn19In0.BxidbmPyncK4jIu9LP1vBMr98hHpHUAiAxGfWIqMf0U");
+        InputStream audio = audioUrl.openStream();
+        //
+        // InputStream video = getClass()
+        // .getResourceAsStream("/" + fakeVideoWithPaddingName);
+        // InputStream audio = getClass()
+        // .getResourceAsStream("/" + fakeAudioWithPaddingName);
+
+        browser.uploadFile(EUS_URL, video, fakeResourcesPathInBrowser,
+                fakeVideoWithPaddingName);
+        browser.uploadFile(EUS_URL, audio, fakeResourcesPathInBrowser,
+                fakeAudioWithPaddingName);
+
+    }
+
     public String getVideoPathByLocalRecorderId(String localRecorderId) {
         final String fileName = localRecorderId + ".webm";
         return "/home/ubuntu/Downloads/" + fileName;
@@ -485,7 +520,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         if (ET_ETM_TJOB_ATTACHMENT_API != null) {
             try {
                 logger.info("Attaching file {} to TJob Exec", fileName);
-                RestClient restClient = new RestClient();
 
                 restClient.postMultipart(ET_ETM_TJOB_ATTACHMENT_API, fileName,
                         file);
