@@ -428,8 +428,8 @@ public class BrowserClient {
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += "browserfile/session/" + sessionId;
             url += "?fileUrl=" + URLEncoder.encode(fileUrl, "UTF-8");
-            url += "&fileName=" + URLEncoder.encode(fileName, "UTF-8");
-            url += "&path=" + URLEncoder.encode(completeFilePath, "UTF-8");
+            url += "&fileName=" + fileName;
+            url += "&path=" + completeFilePath;
 
             restClient.sendPost(url, null);
         }
