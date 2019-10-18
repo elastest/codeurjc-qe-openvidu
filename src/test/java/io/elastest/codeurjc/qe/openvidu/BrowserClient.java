@@ -8,6 +8,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -369,7 +372,7 @@ public class BrowserClient {
         return null;
     }
 
-    public void uploadFile(String hubUrl, InputStream file,
+    public void uploadFile(String hubUrl, InputStream fileStream,
             String completeFilePath, String fileName) throws Exception {
         if (hubUrl != null) {
             SessionId sessionId = ((RemoteWebDriver) getDriver())
@@ -395,16 +398,13 @@ public class BrowserClient {
                 }
                 logger.info("Folder created at {}.", folderPath);
             }
+
+            ReadableByteChannel readChannel = Channels.newChannel(fileStream);
+            FileOutputStream fileOS = new FileOutputStream(folder + fileName);
+            FileChannel writeChannel = fileOS.getChannel();
+            writeChannel.transferFrom(readChannel, 0, Long.MAX_VALUE);
+
             File targetFile = new File(folder + fileName);
-
-            OutputStream outStream = new FileOutputStream(targetFile);
-
-            byte[] buffer = new byte[8 * 1024];
-            int bytesRead;
-            while ((bytesRead = file.read(buffer)) != -1) {
-                outStream.write(buffer, 0, bytesRead);
-            }
-            outStream.close();
             FileInputStream input = new FileInputStream(targetFile);
 
             logger.info(
