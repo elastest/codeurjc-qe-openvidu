@@ -1,7 +1,6 @@
 package io.elastest.codeurjc.qe.openvidu.recording;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -489,25 +488,13 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
     public void uploadFakeResourcesForTest(BrowserClient browser)
             throws Exception {
+        String videoUrl = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
+        String audioUrl = "http://public.openvidu.io/fakeaudio_with_padding.wav";
 
-        URL videoUrl = new URL(
-                "http://public.openvidu.io/fakevideo_with_padding2.y4m");
-        InputStream video = videoUrl.openStream();
-
-        URL audioUrl = new URL(
-                "http://public.openvidu.io/fakeaudio_with_padding.wav");
-        InputStream audio = audioUrl.openStream();
-        //
-        // InputStream video = getClass()
-        // .getResourceAsStream("/" + fakeVideoWithPaddingName);
-        // InputStream audio = getClass()
-        // .getResourceAsStream("/" + fakeAudioWithPaddingName);
-
-        browser.uploadFile(EUS_URL, video, fakeResourcesPathInBrowser,
+        browser.uploadFileFromUrl(EUS_URL, videoUrl, fakeResourcesPathInBrowser,
                 fakeVideoWithPaddingName);
-        browser.uploadFile(EUS_URL, audio, fakeResourcesPathInBrowser,
+        browser.uploadFileFromUrl(EUS_URL, audioUrl, fakeResourcesPathInBrowser,
                 fakeAudioWithPaddingName);
-
     }
 
     public String getVideoPathByLocalRecorderId(String localRecorderId) {

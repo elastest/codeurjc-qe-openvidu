@@ -8,6 +8,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -35,8 +36,35 @@ public class RestClient {
         if (statusCode != 200) {
             throw new Exception("Error on attach file: Code " + statusCode);
         }
-
+        httpClient.close();
         return responseBody;
+    }
+
+    public HttpEntity sendPost(String urlString, String jsonBody)
+            throws Exception {
+        logger.info("Sending post to {}", urlString);
+
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(urlString);
+
+        StringEntity entity = new StringEntity(jsonBody);
+        httpPost.setEntity(entity);
+        httpPost.setHeader("Accept", "application/json");
+        httpPost.setHeader("Content-type", "application/json");
+
+        CloseableHttpResponse response = client.execute(httpPost);
+
+        final int statusCode = response.getStatusLine().getStatusCode();
+        logger.info("Response Code: {}", statusCode);
+        HttpEntity responseEntity = response.getEntity();
+        response.close();
+
+        if (statusCode != 200) {
+            throw new Exception("Error on attach file: Code " + statusCode);
+        }
+
+        client.close();
+        return responseEntity;
     }
 
     public HttpEntity postMultipart(String urlString, String fileNameWithExt,
@@ -66,6 +94,7 @@ public class RestClient {
             throw new Exception("Error on attach file: Code " + statusCode);
         }
 
+        httpClient.close();
         return responseEntity;
     }
 

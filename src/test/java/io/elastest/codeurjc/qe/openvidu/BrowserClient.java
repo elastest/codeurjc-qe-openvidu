@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -372,6 +372,7 @@ public class BrowserClient {
         return null;
     }
 
+    @SuppressWarnings("resource")
     public void uploadFile(String hubUrl, InputStream fileStream,
             String completeFilePath, String fileName) throws Exception {
         if (hubUrl != null) {
@@ -412,6 +413,25 @@ public class BrowserClient {
                     fileName, sessionId);
 
             restClient.postMultipart(url, fileName, IOUtils.toByteArray(input));
+        }
+    }
+
+    public void uploadFileFromUrl(String hubUrl, String fileUrl,
+            String completeFilePath, String fileName) throws Exception {
+        if (hubUrl != null) {
+            SessionId sessionId = ((RemoteWebDriver) getDriver())
+                    .getSessionId();
+            logger.info(
+                    "Starting upload of file {} to browser with session id {}",
+                    fileName, sessionId);
+
+            String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            url += "browserfile/session/" + sessionId;
+            url += "?fileUrl=" + URLEncoder.encode(fileUrl, "UTF-8");
+            url += "&fileName=" + fileName;
+            url += "&path=" + completeFilePath;
+
+            restClient.sendPost(url, "{}");
         }
     }
 }
