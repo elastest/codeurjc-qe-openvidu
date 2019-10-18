@@ -51,7 +51,7 @@ public class RestClient {
                 : null;
         httpPost.setEntity(entity);
 
-        httpPost.setHeader("Accept", "application/json");
+        httpPost.setHeader("Accept", "*/*");
         httpPost.setHeader("Content-type", "application/json");
 
         CloseableHttpResponse response = client.execute(httpPost);
