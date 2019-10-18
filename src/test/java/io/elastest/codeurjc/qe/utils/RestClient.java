@@ -47,10 +47,10 @@ public class RestClient {
         CloseableHttpClient client = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(urlString);
 
-        if (jsonBody != null) {
-            StringEntity entity = new StringEntity(jsonBody);
-            httpPost.setEntity(entity);
-        }
+        StringEntity entity = jsonBody != null ? new StringEntity(jsonBody)
+                : null;
+        httpPost.setEntity(entity);
+
         httpPost.setHeader("Accept", "application/json");
         httpPost.setHeader("Content-type", "application/json");
 
