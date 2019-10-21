@@ -310,8 +310,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     + userId + " session " + SESSION_ID + ": " + e.getMessage();
             throw new IOException(msg);
         }
-
-        openSutAndWaitForEvents(browserClient);
     }
 
     private void openSutAndWaitForEventsInBrowsers() {
