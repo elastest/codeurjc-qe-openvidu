@@ -382,7 +382,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
             // 20min
-            int timeoutSeconds = 1200;
+            int timeoutSeconds = 1800;
             long endWaitTime = System.currentTimeMillis()
                     + timeoutSeconds * 1000;
 
