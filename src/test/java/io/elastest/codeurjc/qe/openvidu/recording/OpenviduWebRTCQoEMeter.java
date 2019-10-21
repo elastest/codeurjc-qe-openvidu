@@ -336,7 +336,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         }
 
         try {
-            logger.info("Waiting for all browsers are ready");
+            logger.info(
+                    "Waiting for all browsers are fully ready (sut url opened and all events received)");
             waitForSessionReadyLatch.await();
         } catch (AbortedException e) {
             logger.error("Some browser does not have a stable session: {}",
