@@ -220,33 +220,27 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         }
 
         try {
-            logger.info("Waiting for all browsers  are ready");
+            logger.info("Waiting for all browsers are started");
             waitForSessionReadyLatch.await();
         } catch (AbortedException e) {
-            logger.error("Some browser does not have a stable session: {}",
-                    e.getMessage());
-            Assertions.fail("Session did not reach stable status in timeout: "
-                    + e.getMessage());
+            final String msg = "Some browser has not started correctly: "
+                    + e.getMessage();
+            logger.error(msg);
+            Assertions.fail(msg);
             return;
         }
 
-        logger.info("All browsers of session {} are now ready!");
+        logger.info("All browsers are now started!");
+
+        openSutAndWaitForEventsInBrowsers();
     }
 
     @SuppressWarnings("unchecked")
     public void startBrowser(TestInfo info, String userId)
             throws TimeoutException, IOException, SessionNotCreatedException {
         logger.info("Starting browser for user {} ", userId);
-
         String testName = info.getTestMethod().get().getName();
         int SESSION_ID = 1;
-
-        String publicUrl = OPENVIDU_SUT_URL
-                + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
-
-        String completeUrl = OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl
-                + "&secret=" + OPENVIDU_SECRET + "&sessionId=" + SESSION_ID
-                + "&userId=" + userId;
 
         WebDriver driver;
         DesiredCapabilities capabilities = DesiredCapabilities.chrome();
@@ -286,11 +280,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                         + fakeResourcesPathInBrowser
                         + fakeAudioWithPaddingName);
             } else { // Development (docker)
-                String sutHost = System.getenv("ET_SUT_HOST");
-
-                completeUrl = "https://" + sutHost + ":5000?publicurl=https://"
-                        + sutHost + ":4443/&secret=" + OPENVIDU_SECRET
-                        + "&sessionId=" + SESSION_ID + "&userId=" + userId;
             }
 
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
@@ -322,6 +311,67 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             throw new IOException(msg);
         }
 
+        openSutAndWaitForEvents(browserClient);
+    }
+
+    private void openSutAndWaitForEventsInBrowsers() {
+        final List<Runnable> browserThreads = new ArrayList<>();
+        waitForSessionReadyLatch = new CountDownLatchWithException(
+                browserClientList.size());
+
+        for (BrowserClient browserClient : browserClientList) {
+            browserThreads.add(() -> {
+                try {
+                    this.openSutAndWaitForEvents(browserClient);
+                    waitForSessionReadyLatch.countDown();
+                } catch (TimeoutException | IOException | NullPointerException
+                        | SessionNotCreatedException e) {
+                    logger.error("Error on start browser of user {}: {}",
+                            browserClient.getUserId(), e.getMessage());
+                    waitForSessionReadyLatch.abort(e.getMessage());
+                }
+            });
+        }
+
+        for (Runnable r : browserThreads) {
+            browserInitializationTaskExecutor.execute(r);
+        }
+
+        try {
+            logger.info("Waiting for all browsers are ready");
+            waitForSessionReadyLatch.await();
+        } catch (AbortedException e) {
+            logger.error("Some browser does not have a stable session: {}",
+                    e.getMessage());
+            Assertions.fail("Session did not reach stable status in timeout: "
+                    + e.getMessage());
+            return;
+        }
+
+        logger.info("All browsers are now fully ready!");
+    }
+
+    private void openSutAndWaitForEvents(BrowserClient browserClient)
+            throws TimeoutException, IOException, SessionNotCreatedException {
+        String publicUrl = OPENVIDU_SUT_URL
+                + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
+
+        String completeUrl = OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl
+                + "&secret=" + OPENVIDU_SECRET + "&sessionId="
+                + browserClient.getSession() + "&userId="
+                + browserClient.getUserId();
+
+        String noUseAWS = System.getProperty("noUseAWS");
+        if (noUseAWS == null || !"true".equals(noUseAWS)) {
+        } else { // Development (docker)
+            String sutHost = System.getenv("ET_SUT_HOST");
+
+            completeUrl = "https://" + sutHost + ":5000?publicurl=https://"
+                    + sutHost + ":4443/&secret=" + OPENVIDU_SECRET
+                    + "&sessionId=" + browserClient.getSession() + "&userId="
+                    + browserClient.getUserId();
+        }
+
         browserClient.getDriver().get(completeUrl);
         browserClient.startEventPolling(true, false);
 
@@ -331,8 +381,9 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             browserClient.waitForEvent("streamCreated", USERS_BY_SESSION);
             browserClient.stopEventPolling();
         } catch (TimeoutException | NullPointerException e) {
-            String msg = "Error on waiting for events on user " + userId
-                    + " session " + SESSION_ID + ": " + e.getMessage();
+            String msg = "Error on waiting for events on user "
+                    + browserClient.getUserId() + " session "
+                    + browserClient.getSession() + ": " + e.getMessage();
             if (e instanceof TimeoutException) {
                 throw new TimeoutException(msg);
             } else if (e instanceof NullPointerException) {
@@ -341,7 +392,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 throw e;
             }
         }
-
     }
 
     public String startWebRTCQoEMeter(String presenterPath, String viewerPath,
