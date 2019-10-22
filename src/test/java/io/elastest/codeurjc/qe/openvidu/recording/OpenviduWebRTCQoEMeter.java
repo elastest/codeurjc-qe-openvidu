@@ -347,7 +347,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             return;
         }
 
-        logger.info("All browsers are now fully ready!");
+        logger.info(
+                "All browsers are now fully ready! (sut url opened and all events received)");
     }
 
     private void openSutAndWaitForEvents(BrowserClient browserClient)
@@ -522,7 +523,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         browser.startRecording(localRecorderId);
 
         // seconds
-        final int WAIT_TIME = 60;
+        final int WAIT_TIME = 50;
         long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
 
         // Wait
