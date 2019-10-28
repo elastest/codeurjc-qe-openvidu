@@ -54,59 +54,51 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             // Get User1/User2 streamIds
             JsonArray user1SubscriberStreamIds = user1Browser
                     .getSubscriberStreams();
+            JsonArray user1PublisherStreamIds = user1Browser
+                    .getPublisherStreams();
+
             JsonArray user2SubscriberStreamIds = user2Browser
                     .getSubscriberStreams();
+            JsonArray user2PublisherStreamIds = user2Browser
+                    .getPublisherStreams();
 
             // Init and get user1/user2 localRecorderIds
             String user2InUser1LocalRecorderId = user1Browser.initLocalRecorder(
                     user1SubscriberStreamIds.get(0).getAsString());
+            String user1InUser1LocalRecorderId = user1Browser.initLocalRecorder(
+                    user1PublisherStreamIds.get(0).getAsString());
 
             String user1InUser2LocalRecorderId = user2Browser.initLocalRecorder(
                     user2SubscriberStreamIds.get(0).getAsString());
+            String user2InUser2LocalRecorderId = user2Browser.initLocalRecorder(
+                    user2PublisherStreamIds.get(0).getAsString());
 
             // Record and download Subscriber/Publisher videos
             recordAndDownloadUser1AndUser2Videos(user1Browser, user2Browser,
-                    user2InUser1LocalRecorderId, user1InUser2LocalRecorderId);
+                    user1InUser1LocalRecorderId, user1InUser2LocalRecorderId,
+                    user2InUser2LocalRecorderId, user2InUser1LocalRecorderId);
 
             // Get Subscriber/Publisher video paths
+
+            String user1VideoPathInUser1Browser = getVideoPathByLocalRecorderId(
+                    user1InUser1LocalRecorderId);
+
             String user2VideoPathInUser1Browser = getVideoPathByLocalRecorderId(
                     user2InUser1LocalRecorderId);
+
+            String user2VideoPathInUser2Browser = getVideoPathByLocalRecorderId(
+                    user2InUser2LocalRecorderId);
+
             String user1VideoPathInUser2Browser = getVideoPathByLocalRecorderId(
                     user1InUser2LocalRecorderId);
 
-            // Start WebRTCQoEMeter service in EUS
-            String qoeServiceId = startWebRTCQoEMeter(
-                    user1VideoPathInUser2Browser, user2VideoPathInUser1Browser,
-                    user1Browser, user2Browser);
+            // Process and generate metrics of the user 1 video
+            startAndProcessVideoMetrics(user1Browser, user2Browser,
+                    user1VideoPathInUser1Browser, user1VideoPathInUser2Browser);
 
-            // Wait for CSV and Get
-            List<byte[]> csvList = waitForCSV(qoeServiceId, user1Browser);
-
-            if (csvList != null && csvList.size() > 0) {
-                int count = 1;
-                for (byte[] csvFile : csvList) {
-                    attachFileToExecution(csvFile, "csv-" + count + ".csv");
-                    count++;
-                }
-
-            } else {
-                Assertions.fail("Csv files List is null or empty");
-            }
-
-            // Get Metric
-            List<Double> metrics = getMetric(qoeServiceId, user1Browser);
-
-            if (metrics != null && metrics.size() > 0) {
-                int count = 1;
-                for (Double metric : metrics) {
-                    attachFileToExecution(String.valueOf(metric).getBytes(),
-                            "metric-" + count + ".txt");
-                    count++;
-                }
-
-            } else {
-                Assertions.fail("Metric files List is null or empty");
-            }
+            // Process and generate metrics of the user 2 video
+            startAndProcessVideoMetrics(user1Browser, user2Browser,
+                    user2VideoPathInUser2Browser, user2VideoPathInUser1Browser);
 
             // // For last, get and attach original videos
             // byte[] originalUser1Video = user1Browser.getFile(EUS_URL,
@@ -141,14 +133,73 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         }
     }
 
+    private void startAndProcessVideoMetrics(BrowserClient publisherBrowser,
+            BrowserClient subscriberBrowser,
+            String originalVideoInPublisherBrowser,
+            String receivedVideoInSubscriber) throws Exception {
+        logger.info("Starting process of user {} video metrics",
+                publisherBrowser.getUserId());
+
+        // Start WebRTCQoEMeter service in EUS
+        String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
+                originalVideoInPublisherBrowser, publisherBrowser,
+                subscriberBrowser);
+
+        // Wait for CSV and Get
+        List<byte[]> csvList = waitForCSV(qoeServiceId, publisherBrowser);
+
+        if (csvList != null && csvList.size() > 0) {
+            int count = 1;
+            for (byte[] csvFile : csvList) {
+                attachFileToExecution(csvFile, publisherBrowser.getUserId()
+                        + "-csv-" + count + ".csv");
+                count++;
+            }
+
+        } else {
+            Assertions.fail("Csv files List is null or empty");
+        }
+
+        // Get Metric
+        List<Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+
+        if (metrics != null && metrics.size() > 0) {
+            int count = 1;
+            for (Double metric : metrics) {
+                attachFileToExecution(String.valueOf(metric).getBytes(),
+                        publisherBrowser.getUserId() + "-metric-" + count
+                                + ".txt");
+                count++;
+            }
+
+        } else {
+            Assertions.fail("Metric files List is null or empty for user "
+                    + publisherBrowser.getUserId());
+        }
+    }
+
     private void recordAndDownloadUser1AndUser2Videos(
             BrowserClient user1Browser, BrowserClient user2Browser,
-            String user2InUser1LocalRecorder, String user1InUser2LocalRecorder)
+            String user1InUser1LocalRecorder, String user1InUser2LocalRecorder,
+            String user2InUser2LocalRecorder, String user2InUser1LocalRecorder)
             throws Exception {
         CountDownLatchWithException waitForRecording = new CountDownLatchWithException(
-                2);
+                4);
 
         final List<Runnable> browserThreads = new ArrayList<>();
+
+        browserThreads.add(() -> {
+            try {
+                recordAndDownloadBrowserVideo(user1Browser,
+                        user1InUser1LocalRecorder);
+                waitForRecording.countDown();
+            } catch (Exception e) {
+                logger.error(
+                        "Error on record and download browser video of user 1 in user 1 browser: {}",
+                        e.getMessage());
+                waitForRecording.abort(e.getMessage());
+            }
+        });
 
         browserThreads.add(() -> {
             try {
@@ -158,6 +209,19 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             } catch (Exception e) {
                 logger.error(
                         "Error on record and download browser video of user 2 in user 1 browser: {}",
+                        e.getMessage());
+                waitForRecording.abort(e.getMessage());
+            }
+        });
+
+        browserThreads.add(() -> {
+            try {
+                recordAndDownloadBrowserVideo(user2Browser,
+                        user2InUser2LocalRecorder);
+                waitForRecording.countDown();
+            } catch (Exception e) {
+                logger.error(
+                        "Error on record and download browser video of user 2 in user 2 browser: {}",
                         e.getMessage());
                 waitForRecording.abort(e.getMessage());
             }
