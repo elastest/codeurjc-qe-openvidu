@@ -97,7 +97,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     user1VideoPathInUser1Browser, user1VideoPathInUser2Browser);
 
             // Process and generate metrics of the user 2 video
-            startAndProcessVideoMetrics(user1Browser, user2Browser,
+            startAndProcessVideoMetrics(user2Browser, user1Browser,
                     user2VideoPathInUser2Browser, user2VideoPathInUser1Browser);
 
             // // For last, get and attach original videos
