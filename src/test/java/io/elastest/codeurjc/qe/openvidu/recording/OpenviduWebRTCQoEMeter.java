@@ -3,6 +3,7 @@ package io.elastest.codeurjc.qe.openvidu.recording;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -346,6 +347,12 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             } else { // Development (docker)
             }
 
+            HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
+            chromePrefs.put(
+                    "profile.default_content_setting_values.automatic_downloads",
+                    1);
+            options.setExperimentalOption("prefs", chromePrefs);
+
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
             capabilities.setCapability("elastestTimeout", 3600);
 
@@ -353,6 +360,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             if (browserVersion != null) {
                 capabilities.setVersion(browserVersion);
             }
+
             // Create browser session
             try {
                 driver = new RemoteWebDriver(new URL(EUS_URL), capabilities);
