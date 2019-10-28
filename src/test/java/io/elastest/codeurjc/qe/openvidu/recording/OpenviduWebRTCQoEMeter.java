@@ -147,14 +147,12 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 subscriberBrowser);
 
         // Wait for CSV and Get
-        List<byte[]> csvList = waitForCSV(qoeServiceId, publisherBrowser);
+        Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
 
-        if (csvList != null && csvList.size() > 0) {
-            int count = 1;
-            for (byte[] csvFile : csvList) {
-                attachFileToExecution(csvFile, publisherBrowser.getUserId()
-                        + "-csv-" + count + ".csv");
-                count++;
+        if (csvMap != null && csvMap.size() > 0) {
+            for (HashMap.Entry<String, byte[]> csvFile : csvMap.entrySet()) {
+                attachFileToExecution(csvFile.getValue(),
+                        publisherBrowser.getUserId() + "-" + csvFile.getKey());
             }
 
         } else {
@@ -500,7 +498,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
     }
 
     @SuppressWarnings("unchecked")
-    public List<byte[]> waitForCSV(String qoeServiceId,
+    public Map<String, byte[]> waitForCSV(String qoeServiceId,
             BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
             // 20min
@@ -534,15 +532,15 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             url = urlPrefix + "/csv";
             response = new String(restClient.sendGet(url));
             logger.info("CSV RESPONSE: {}", response);
-            List<byte[]> csvFiles = null;
+            Map<String, byte[]> csvFiles = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.configure(
                         DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                         false);
 
-                csvFiles = (List<byte[]>) objectMapper.readValue(response,
-                        new TypeReference<List<byte[]>>() {
+                csvFiles = (Map<String, byte[]>) objectMapper.readValue(
+                        response, new TypeReference<Map<String, byte[]>>() {
                         });
 
                 return csvFiles;
