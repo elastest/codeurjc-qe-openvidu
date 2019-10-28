@@ -159,22 +159,22 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             Assertions.fail("Csv files List is null or empty");
         }
 
-        // Get Metric
-        List<Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+        // Get Metric TODO
+//        List<Double> metrics = getMetric(qoeServiceId, publisherBrowser);
 
-        if (metrics != null && metrics.size() > 0) {
-            int count = 1;
-            for (Double metric : metrics) {
-                attachFileToExecution(String.valueOf(metric).getBytes(),
-                        publisherBrowser.getUserId() + "-metric-" + count
-                                + ".txt");
-                count++;
-            }
-
-        } else {
-            Assertions.fail("Metric files List is null or empty for user "
-                    + publisherBrowser.getUserId());
-        }
+        // if (metrics != null && metrics.size() > 0) {
+        // int count = 1;
+        // for (Double metric : metrics) {
+        // attachFileToExecution(String.valueOf(metric).getBytes(),
+        // publisherBrowser.getUserId() + "-metric-" + count
+        // + ".txt");
+        // count++;
+        // }
+        //
+        // } else {
+        // Assertions.fail("Metric files List is null or empty for user "
+        // + publisherBrowser.getUserId());
+        // }
     }
 
     private void recordAndDownloadUser1AndUser2Videos(
