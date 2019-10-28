@@ -35,7 +35,7 @@ import io.elastest.codeurjc.qe.utils.RestClient;
 public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
     final String fakeResourcesPathInBrowser = "/opt/openvidu/";
     final String fakeVideoWithPaddingName = "fakevideo_with_padding2.y4m";
-    final String fakeAudioWithPaddingName = "fakeaudio_with_padding.y4m";
+    final String fakeAudioWithPaddingName = "fakeaudio_with_padding.wav";
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
