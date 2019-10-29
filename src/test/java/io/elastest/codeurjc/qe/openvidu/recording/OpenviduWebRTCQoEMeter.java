@@ -159,22 +159,20 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             Assertions.fail("Csv files List is null or empty");
         }
 
-        // Get Metric TODO
-//        List<Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+        // Get Metrics
+        Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
 
-        // if (metrics != null && metrics.size() > 0) {
-        // int count = 1;
-        // for (Double metric : metrics) {
-        // attachFileToExecution(String.valueOf(metric).getBytes(),
-        // publisherBrowser.getUserId() + "-metric-" + count
-        // + ".txt");
-        // count++;
-        // }
-        //
-        // } else {
-        // Assertions.fail("Metric files List is null or empty for user "
-        // + publisherBrowser.getUserId());
-        // }
+        if (metrics != null && metrics.size() > 0) {
+            for (HashMap.Entry<String, Double> metric : metrics.entrySet()) {
+                attachFileToExecution(
+                        String.valueOf(metric.getValue()).getBytes(),
+                        publisherBrowser.getUserId() + "-" + metric.getKey());
+            }
+
+        } else {
+            Assertions.fail("Metric files List is null or empty for user "
+                    + publisherBrowser.getUserId());
+        }
     }
 
     private void recordAndDownloadUser1AndUser2Videos(
@@ -553,7 +551,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Double> getMetric(String qoeServiceId,
+    public Map<String, Double> getMetric(String qoeServiceId,
             BrowserClient browserClient) throws Exception {
         if (EUS_URL != null) {
             logger.info("Getting metric generated in WebRTC QoE Meter");
@@ -568,15 +566,15 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             String url = urlPrefix + "/metric";
             String response = new String(restClient.sendGet(url));
             logger.info("CSV RESPONSE: {}", response);
-            List<Double> metrics = null;
+            Map<String, Double> metrics = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.configure(
                         DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                         false);
 
-                metrics = (List<Double>) objectMapper.readValue(response,
-                        new TypeReference<List<Double>>() {
+                metrics = (Map<String, Double>) objectMapper.readValue(response,
+                        new TypeReference<Map<String, Double>>() {
                         });
 
                 return metrics;
