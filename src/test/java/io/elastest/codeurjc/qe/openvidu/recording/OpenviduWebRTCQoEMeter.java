@@ -498,7 +498,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             BrowserClient user1BrowserClient, BrowserClient user2BrowserClient)
             throws Exception {
         if (EUS_URL != null) {
-            logger.info("Starting WebRTC QoE Meter");
+            logger.info("Starting WebRTC QoE Meter for user {}",
+                    user1BrowserClient.getUserId());
 
             SessionId user1SessionId = ((RemoteWebDriver) user1BrowserClient
                     .getDriver()).getSessionId();
@@ -519,8 +520,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             String id = new String(response);
 
             logger.info(
-                    "Started WebRTC QoE Meter for Sessions {} and {} successfully! Id {}",
-                    user1SessionId, user2SessionId, id);
+                    "Started WebRTC QoE Meter for user {} successfully! Id {}",
+                    user1BrowserClient.getUserId(), id);
 
             return id;
         }
