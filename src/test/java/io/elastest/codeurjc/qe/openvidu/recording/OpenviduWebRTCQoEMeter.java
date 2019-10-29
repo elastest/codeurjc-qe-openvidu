@@ -108,9 +108,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                             user1VideoPathInUser2Browser);
                     waitForRecording.countDown();
                 } catch (Exception e) {
-                    logger.error(
-                            "Error on record and download browser video of user 1 in user 1 browser: {}",
-                            e.getMessage());
+                    logger.error("Error on process qoe metrics of user {} :{}",
+                            user1Browser.getUserId(), e.getMessage());
                     waitForRecording.abort(e.getMessage());
                 }
             });
@@ -123,9 +122,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                             user2VideoPathInUser1Browser);
                     waitForRecording.countDown();
                 } catch (Exception e) {
-                    logger.error(
-                            "Error on record and download browser video of user 1 in user 1 browser: {}",
-                            e.getMessage());
+                    logger.error("Error on process qoe metrics of user {} :{}",
+                            user2Browser.getUserId(), e.getMessage());
                     waitForRecording.abort(e.getMessage());
                 }
             });
