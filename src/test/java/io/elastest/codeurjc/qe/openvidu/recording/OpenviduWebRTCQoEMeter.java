@@ -90,7 +90,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     user1InUser2LocalRecorderId);
 
             // Process and generate metrics
-
             CountDownLatchWithException waitForRecording = new CountDownLatchWithException(2);
 
             final List<Runnable> browserThreads = new ArrayList<>();
@@ -153,72 +152,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             Assertions.fail(e.getMessage());
             return;
         }
-    }
-
-    private void startAndProcessVideoMetrics(BrowserClient publisherBrowser,
-            BrowserClient subscriberBrowser, String originalVideoInPublisherBrowser,
-            String receivedVideoInSubscriber) throws Exception {
-        logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
-
-        // Start WebRTCQoEMeter service in EUS
-        String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
-                originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
-
-        // Wait for CSV and Get
-        Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
-
-        if (csvMap == null || csvMap.size() == 0) {
-            Assertions.fail(
-                    "Csv files List is null or empty for user " + publisherBrowser.getUserId());
-        }
-
-        // Get Metrics
-        Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
-
-        if (metrics == null || metrics.size() == 0) {
-            Assertions.fail(
-                    "Metric files List is null or empty for user " + publisherBrowser.getUserId());
-        }
-    }
-
-    private void recordAndDownloadUser1AndUser2Videos(BrowserClient user1Browser,
-            BrowserClient user2Browser, String user1InUser1LocalRecorder,
-            String user1InUser2LocalRecorder, String user2InUser2LocalRecorder,
-            String user2InUser1LocalRecorder) throws Exception {
-        CountDownLatchWithException waitForRecording = new CountDownLatchWithException(4);
-
-        final List<Runnable> browserThreads = new ArrayList<>();
-
-        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
-                "Error on record and download browser video of user 1 in user 1 browser",
-                user1Browser, user1InUser1LocalRecorder);
-
-        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
-                "Error on record and download browser video of user 2 in user 1 browser",
-                user1Browser, user2InUser1LocalRecorder);
-
-        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
-                "Error on record and download browser video of user 2 in user 2 browser",
-                user2Browser, user2InUser2LocalRecorder);
-
-        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
-                "Error on record and download browser video of user 1 in user 2 browser",
-                user2Browser, user1InUser2LocalRecorder);
-
-        for (Runnable r : browserThreads) {
-            browserInitializationTaskExecutor.execute(r);
-        }
-
-        try {
-            logger.info("Waiting for all recordings are done and downloaded");
-            waitForRecording.await();
-            logger.info("All recordings are done!");
-        } catch (AbortedException e) {
-            logger.error("Some recording has failed: {}", e.getMessage());
-            Assertions.fail("Some recording has failed: " + e.getMessage());
-            return;
-        }
-
     }
 
     private void startBrowsers(TestInfo info) throws TimeoutException, IOException {
@@ -424,6 +357,72 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
     public String getVideoPathByLocalRecorderId(String localRecorderId) {
         final String fileName = localRecorderId + ".webm";
         return "/home/ubuntu/Downloads/" + fileName;
+    }
+
+    private void startAndProcessVideoMetrics(BrowserClient publisherBrowser,
+            BrowserClient subscriberBrowser, String originalVideoInPublisherBrowser,
+            String receivedVideoInSubscriber) throws Exception {
+        logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
+
+        // Start WebRTCQoEMeter service in EUS
+        String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
+                originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
+
+        // Wait for CSV and Get
+        Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
+
+        if (csvMap == null || csvMap.size() == 0) {
+            Assertions.fail(
+                    "Csv files List is null or empty for user " + publisherBrowser.getUserId());
+        }
+
+        // Get Metrics
+        Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+
+        if (metrics == null || metrics.size() == 0) {
+            Assertions.fail(
+                    "Metric files List is null or empty for user " + publisherBrowser.getUserId());
+        }
+    }
+
+    private void recordAndDownloadUser1AndUser2Videos(BrowserClient user1Browser,
+            BrowserClient user2Browser, String user1InUser1LocalRecorder,
+            String user1InUser2LocalRecorder, String user2InUser2LocalRecorder,
+            String user2InUser1LocalRecorder) throws Exception {
+        CountDownLatchWithException waitForRecording = new CountDownLatchWithException(4);
+
+        final List<Runnable> browserThreads = new ArrayList<>();
+
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 1 in user 1 browser",
+                user1Browser, user1InUser1LocalRecorder);
+
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 2 in user 1 browser",
+                user1Browser, user2InUser1LocalRecorder);
+
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 2 in user 2 browser",
+                user2Browser, user2InUser2LocalRecorder);
+
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 1 in user 2 browser",
+                user2Browser, user1InUser2LocalRecorder);
+
+        for (Runnable r : browserThreads) {
+            browserInitializationTaskExecutor.execute(r);
+        }
+
+        try {
+            logger.info("Waiting for all recordings are done and downloaded");
+            waitForRecording.await();
+            logger.info("All recordings are done!");
+        } catch (AbortedException e) {
+            logger.error("Some recording has failed: {}", e.getMessage());
+            Assertions.fail("Some recording has failed: " + e.getMessage());
+            return;
+        }
+
     }
 
     public String startWebRTCQoEMeter(String presenterPath, String viewerPath,
