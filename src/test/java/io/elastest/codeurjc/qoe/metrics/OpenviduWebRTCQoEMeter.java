@@ -1,4 +1,4 @@
-package io.elastest.codeurjc.qe.openvidu.recording;
+package io.elastest.codeurjc.qoe.metrics;
 
 import java.io.IOException;
 import java.net.URL;
@@ -32,7 +32,7 @@ import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException.AbortedException;
 import io.elastest.codeurjc.qe.utils.RestClient;
 
-public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
+public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
     final String fakeResourcesPathInBrowser = "/opt/openvidu/";
     final String fakeVideoWithPaddingName = "fakevideo_with_padding2.y4m";
     final String fakeAudioWithPaddingName = "fakeaudio_with_padding.wav";
@@ -192,7 +192,6 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         openSutAndWaitForEventsInBrowsers();
     }
 
-    @SuppressWarnings("unchecked")
     public void startBrowser(TestInfo info, String userId)
             throws TimeoutException, IOException, SessionNotCreatedException {
         logger.info("Starting browser for user {} ", userId);
@@ -218,23 +217,12 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             capabilities.setCapability("testName", testName + "_" + userId.replaceAll("-", "_"));
 
-            String noUseAWS = System.getProperty("noUseAWS");
-            if (noUseAWS == null || !"true".equals(noUseAWS)) {
-                // AWS capabilities for browsers
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, String> awsConfigMap = mapper.readValue(awsConfig.toString(),
-                        Map.class);
-
-                capabilities.setCapability("awsConfig", awsConfigMap);
-
-                // This flag sets the video input (with padding)
-                options.addArguments("--use-file-for-fake-video-capture="
-                        + fakeResourcesPathInBrowser + fakeVideoWithPaddingName);
-                // This flag sets the audio input
-                options.addArguments("--use-file-for-fake-audio-capture="
-                        + fakeResourcesPathInBrowser + fakeAudioWithPaddingName);
-            } else { // Development (docker)
-            }
+            // This flag sets the video input (with padding)
+            options.addArguments("--use-file-for-fake-video-capture=" + fakeResourcesPathInBrowser
+                    + fakeVideoWithPaddingName);
+            // This flag sets the audio input
+            options.addArguments("--use-file-for-fake-audio-capture=" + fakeResourcesPathInBrowser
+                    + fakeAudioWithPaddingName);
 
             HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
             chromePrefs.put("profile.default_content_setting_values.automatic_downloads", 1);
