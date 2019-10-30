@@ -180,13 +180,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         // Wait for CSV and Get
         Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
 
-        if (csvMap != null && csvMap.size() > 0) {
-            for (HashMap.Entry<String, byte[]> csvFile : csvMap.entrySet()) {
-                attachFileToExecution(csvFile.getValue(),
-                        publisherBrowser.getUserId() + "-" + csvFile.getKey());
-            }
-
-        } else {
+        if (csvMap == null || csvMap.size() == 0) {
             Assertions.fail("Csv files List is null or empty for user "
                     + publisherBrowser.getUserId());
         }
@@ -194,14 +188,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         // Get Metrics
         Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
 
-        if (metrics != null && metrics.size() > 0) {
-            for (HashMap.Entry<String, Double> metric : metrics.entrySet()) {
-                attachFileToExecution(
-                        String.valueOf(metric.getValue()).getBytes(),
-                        publisherBrowser.getUserId() + "-" + metric.getKey());
-            }
-
-        } else {
+        if (metrics == null || metrics.size() == 0) {
             Assertions.fail("Metric files List is null or empty for user "
                     + publisherBrowser.getUserId());
         }
@@ -493,6 +480,24 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             }
         }
     }
+    
+    
+    public void uploadFakeResourcesForTest(BrowserClient browser)
+            throws Exception {
+        String videoUrl = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
+        String audioUrl = "http://public.openvidu.io/fakeaudio_with_padding.wav";
+
+        browser.uploadFileFromUrl(EUS_URL, videoUrl, fakeResourcesPathInBrowser,
+                fakeVideoWithPaddingName);
+        browser.uploadFileFromUrl(EUS_URL, audioUrl, fakeResourcesPathInBrowser,
+                fakeAudioWithPaddingName);
+    }
+
+    public String getVideoPathByLocalRecorderId(String localRecorderId) {
+        final String fileName = localRecorderId + ".webm";
+        return "/home/ubuntu/Downloads/" + fileName;
+    }
+
 
     public String startWebRTCQoEMeter(String presenterPath, String viewerPath,
             BrowserClient user1BrowserClient, BrowserClient user2BrowserClient)
@@ -526,6 +531,27 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             return id;
         }
         return null;
+    }
+    
+    
+    
+
+    private void recordAndDownloadBrowserVideo(BrowserClient browser,
+            String localRecorderId) throws Exception {
+        browser.startRecording(localRecorderId);
+
+        // seconds
+        final int WAIT_TIME = 50;
+        long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
+
+        // Wait
+        while (System.currentTimeMillis() < endWaitTime) {
+            sleep(1000);
+        }
+
+        browser.stopRecording(localRecorderId);
+
+        browser.downloadRecording(localRecorderId);
     }
 
     @SuppressWarnings("unchecked")
@@ -619,58 +645,5 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             }
         }
         return null;
-    }
-
-    private void recordAndDownloadBrowserVideo(BrowserClient browser,
-            String localRecorderId) throws Exception {
-        browser.startRecording(localRecorderId);
-
-        // seconds
-        final int WAIT_TIME = 50;
-        long endWaitTime = System.currentTimeMillis() + WAIT_TIME * 1000;
-
-        // Wait
-        while (System.currentTimeMillis() < endWaitTime) {
-            sleep(1000);
-        }
-
-        browser.stopRecording(localRecorderId);
-
-        browser.downloadRecording(localRecorderId);
-    }
-
-    public void uploadFakeResourcesForTest(BrowserClient browser)
-            throws Exception {
-        String videoUrl = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
-        String audioUrl = "http://public.openvidu.io/fakeaudio_with_padding.wav";
-
-        browser.uploadFileFromUrl(EUS_URL, videoUrl, fakeResourcesPathInBrowser,
-                fakeVideoWithPaddingName);
-        browser.uploadFileFromUrl(EUS_URL, audioUrl, fakeResourcesPathInBrowser,
-                fakeAudioWithPaddingName);
-    }
-
-    public String getVideoPathByLocalRecorderId(String localRecorderId) {
-        final String fileName = localRecorderId + ".webm";
-        return "/home/ubuntu/Downloads/" + fileName;
-    }
-
-    public void attachFileToExecution(byte[] file, String fileName)
-            throws Exception {
-        if (ET_ETM_TJOB_ATTACHMENT_API != null) {
-            try {
-                logger.info("Attaching file {} to TJob Exec", fileName);
-
-                restClient.postMultipart(ET_ETM_TJOB_ATTACHMENT_API, fileName,
-                        file);
-
-                logger.info("File with name {} has been attached successfully",
-                        fileName);
-            } catch (Exception e) {
-                String msg = "Error on attach file: " + e.getMessage();
-                logger.error(msg);
-                throw e;
-            }
-        }
     }
 }
