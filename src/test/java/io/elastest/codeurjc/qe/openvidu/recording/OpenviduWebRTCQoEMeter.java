@@ -53,26 +53,22 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         BrowserClient user2Browser = browserClientList.get(1);
         try {
             // Get User1/User2 streamIds
-            JsonArray user1SubscriberStreamIds = user1Browser
-                    .getSubscriberStreams();
-            JsonArray user1PublisherStreamIds = user1Browser
-                    .getPublisherStreams();
+            JsonArray user1SubscriberStreamIds = user1Browser.getSubscriberStreams();
+            JsonArray user1PublisherStreamIds = user1Browser.getPublisherStreams();
 
-            JsonArray user2SubscriberStreamIds = user2Browser
-                    .getSubscriberStreams();
-            JsonArray user2PublisherStreamIds = user2Browser
-                    .getPublisherStreams();
+            JsonArray user2SubscriberStreamIds = user2Browser.getSubscriberStreams();
+            JsonArray user2PublisherStreamIds = user2Browser.getPublisherStreams();
 
             // Init and get user1/user2 localRecorderIds
-            String user2InUser1LocalRecorderId = user1Browser.initLocalRecorder(
-                    user1SubscriberStreamIds.get(0).getAsString());
-            String user1InUser1LocalRecorderId = user1Browser.initLocalRecorder(
-                    user1PublisherStreamIds.get(0).getAsString());
+            String user2InUser1LocalRecorderId = user1Browser
+                    .initLocalRecorder(user1SubscriberStreamIds.get(0).getAsString());
+            String user1InUser1LocalRecorderId = user1Browser
+                    .initLocalRecorder(user1PublisherStreamIds.get(0).getAsString());
 
-            String user1InUser2LocalRecorderId = user2Browser.initLocalRecorder(
-                    user2SubscriberStreamIds.get(0).getAsString());
-            String user2InUser2LocalRecorderId = user2Browser.initLocalRecorder(
-                    user2PublisherStreamIds.get(0).getAsString());
+            String user1InUser2LocalRecorderId = user2Browser
+                    .initLocalRecorder(user2SubscriberStreamIds.get(0).getAsString());
+            String user2InUser2LocalRecorderId = user2Browser
+                    .initLocalRecorder(user2PublisherStreamIds.get(0).getAsString());
 
             // Record and download Subscriber/Publisher videos
             recordAndDownloadUser1AndUser2Videos(user1Browser, user2Browser,
@@ -95,8 +91,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             // Process and generate metrics
 
-            CountDownLatchWithException waitForRecording = new CountDownLatchWithException(
-                    2);
+            CountDownLatchWithException waitForRecording = new CountDownLatchWithException(2);
 
             final List<Runnable> browserThreads = new ArrayList<>();
 
@@ -104,8 +99,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             browserThreads.add(() -> {
                 try {
                     startAndProcessVideoMetrics(user1Browser, user2Browser,
-                            user1VideoPathInUser1Browser,
-                            user1VideoPathInUser2Browser);
+                            user1VideoPathInUser1Browser, user1VideoPathInUser2Browser);
                     waitForRecording.countDown();
                 } catch (Exception e) {
                     logger.error("Error on process qoe metrics of user {} :{}",
@@ -118,8 +112,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             browserThreads.add(() -> {
                 try {
                     startAndProcessVideoMetrics(user2Browser, user1Browser,
-                            user2VideoPathInUser2Browser,
-                            user2VideoPathInUser1Browser);
+                            user2VideoPathInUser2Browser, user2VideoPathInUser1Browser);
                     waitForRecording.countDown();
                 } catch (Exception e) {
                     logger.error("Error on process qoe metrics of user {} :{}",
@@ -138,8 +131,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                 logger.info("All QoE metrics are generated and attached!");
             } catch (AbortedException e) {
                 logger.error("Some QoE metrics has failed: {}", e.getMessage());
-                Assertions
-                        .fail("Some QoE metrics has failed: " + e.getMessage());
+                Assertions.fail("Some QoE metrics has failed: " + e.getMessage());
                 return;
             }
 
@@ -155,107 +147,63 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
         try {
             logger.info("Await termination");
-            browserInitializationTaskExecutor.awaitTermination(5,
-                    TimeUnit.MINUTES);
+            browserInitializationTaskExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-            logger.error(
-                    "Browsers threads could not be finished after 5 minutes");
+            logger.error("Browsers threads could not be finished after 5 minutes");
             Assertions.fail(e.getMessage());
             return;
         }
     }
 
     private void startAndProcessVideoMetrics(BrowserClient publisherBrowser,
-            BrowserClient subscriberBrowser,
-            String originalVideoInPublisherBrowser,
+            BrowserClient subscriberBrowser, String originalVideoInPublisherBrowser,
             String receivedVideoInSubscriber) throws Exception {
-        logger.info("Starting process of user {} video metrics",
-                publisherBrowser.getUserId());
+        logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
 
         // Start WebRTCQoEMeter service in EUS
         String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
-                originalVideoInPublisherBrowser, publisherBrowser,
-                subscriberBrowser);
+                originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
 
         // Wait for CSV and Get
         Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
 
         if (csvMap == null || csvMap.size() == 0) {
-            Assertions.fail("Csv files List is null or empty for user "
-                    + publisherBrowser.getUserId());
+            Assertions.fail(
+                    "Csv files List is null or empty for user " + publisherBrowser.getUserId());
         }
 
         // Get Metrics
         Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
 
         if (metrics == null || metrics.size() == 0) {
-            Assertions.fail("Metric files List is null or empty for user "
-                    + publisherBrowser.getUserId());
+            Assertions.fail(
+                    "Metric files List is null or empty for user " + publisherBrowser.getUserId());
         }
     }
 
-    private void recordAndDownloadUser1AndUser2Videos(
-            BrowserClient user1Browser, BrowserClient user2Browser,
-            String user1InUser1LocalRecorder, String user1InUser2LocalRecorder,
-            String user2InUser2LocalRecorder, String user2InUser1LocalRecorder)
-            throws Exception {
-        CountDownLatchWithException waitForRecording = new CountDownLatchWithException(
-                4);
+    private void recordAndDownloadUser1AndUser2Videos(BrowserClient user1Browser,
+            BrowserClient user2Browser, String user1InUser1LocalRecorder,
+            String user1InUser2LocalRecorder, String user2InUser2LocalRecorder,
+            String user2InUser1LocalRecorder) throws Exception {
+        CountDownLatchWithException waitForRecording = new CountDownLatchWithException(4);
 
         final List<Runnable> browserThreads = new ArrayList<>();
 
-        browserThreads.add(() -> {
-            try {
-                recordAndDownloadBrowserVideo(user1Browser,
-                        user1InUser1LocalRecorder);
-                waitForRecording.countDown();
-            } catch (Exception e) {
-                logger.error(
-                        "Error on record and download browser video of user 1 in user 1 browser: {}",
-                        e.getMessage());
-                waitForRecording.abort(e.getMessage());
-            }
-        });
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 1 in user 1 browser",
+                user1Browser, user1InUser1LocalRecorder);
 
-        browserThreads.add(() -> {
-            try {
-                recordAndDownloadBrowserVideo(user1Browser,
-                        user2InUser1LocalRecorder);
-                waitForRecording.countDown();
-            } catch (Exception e) {
-                logger.error(
-                        "Error on record and download browser video of user 2 in user 1 browser: {}",
-                        e.getMessage());
-                waitForRecording.abort(e.getMessage());
-            }
-        });
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 2 in user 1 browser",
+                user1Browser, user2InUser1LocalRecorder);
 
-        browserThreads.add(() -> {
-            try {
-                recordAndDownloadBrowserVideo(user2Browser,
-                        user2InUser2LocalRecorder);
-                waitForRecording.countDown();
-            } catch (Exception e) {
-                logger.error(
-                        "Error on record and download browser video of user 2 in user 2 browser: {}",
-                        e.getMessage());
-                waitForRecording.abort(e.getMessage());
-            }
-        });
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 2 in user 2 browser",
+                user2Browser, user2InUser2LocalRecorder);
 
-        browserThreads.add(() -> {
-            try {
-                recordAndDownloadBrowserVideo(user2Browser,
-                        user1InUser2LocalRecorder);
-
-                waitForRecording.countDown();
-            } catch (Exception e) {
-                logger.error(
-                        "Error on record and download browser video of user 1 in user 2 browser: {}",
-                        e.getMessage());
-                waitForRecording.abort(e.getMessage());
-            }
-        });
+        recordAndDownloadBrowserVideoInNewThread(browserThreads, waitForRecording,
+                "Error on record and download browser video of user 1 in user 2 browser",
+                user2Browser, user1InUser2LocalRecorder);
 
         for (Runnable r : browserThreads) {
             browserInitializationTaskExecutor.execute(r);
@@ -273,10 +221,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
     }
 
-    private void startBrowsers(TestInfo info)
-            throws TimeoutException, IOException {
-        waitForSessionReadyLatch = new CountDownLatchWithException(
-                USERS_BY_SESSION);
+    private void startBrowsers(TestInfo info) throws TimeoutException, IOException {
+        waitForSessionReadyLatch = new CountDownLatchWithException(USERS_BY_SESSION);
 
         final List<Runnable> browserThreads = new ArrayList<>();
         // Start N browsers
@@ -288,8 +234,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     waitForSessionReadyLatch.countDown();
                 } catch (TimeoutException | IOException | NullPointerException
                         | SessionNotCreatedException e) {
-                    logger.error("Error on start browser of user {}: {}",
-                            userId, e.getMessage());
+                    logger.error("Error on start browser of user {}: {}", userId, e.getMessage());
                     waitForSessionReadyLatch.abort(e.getMessage());
                 }
             });
@@ -303,8 +248,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             logger.info("Waiting for all browsers are started");
             waitForSessionReadyLatch.await();
         } catch (AbortedException e) {
-            final String msg = "Some browser has not started correctly: "
-                    + e.getMessage();
+            final String msg = "Some browser has not started correctly: " + e.getMessage();
             logger.error(msg);
             Assertions.fail(msg);
             return;
@@ -339,33 +283,28 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         } else {
             logger.info("Using ElasTest EUS URL: {}", EUS_URL);
 
-            capabilities.setCapability("testName",
-                    testName + "_" + userId.replaceAll("-", "_"));
+            capabilities.setCapability("testName", testName + "_" + userId.replaceAll("-", "_"));
 
             String noUseAWS = System.getProperty("noUseAWS");
             if (noUseAWS == null || !"true".equals(noUseAWS)) {
                 // AWS capabilities for browsers
                 ObjectMapper mapper = new ObjectMapper();
-                Map<String, String> awsConfigMap = mapper
-                        .readValue(awsConfig.toString(), Map.class);
+                Map<String, String> awsConfigMap = mapper.readValue(awsConfig.toString(),
+                        Map.class);
 
                 capabilities.setCapability("awsConfig", awsConfigMap);
 
                 // This flag sets the video input (with padding)
                 options.addArguments("--use-file-for-fake-video-capture="
-                        + fakeResourcesPathInBrowser
-                        + fakeVideoWithPaddingName);
+                        + fakeResourcesPathInBrowser + fakeVideoWithPaddingName);
                 // This flag sets the audio input
                 options.addArguments("--use-file-for-fake-audio-capture="
-                        + fakeResourcesPathInBrowser
-                        + fakeAudioWithPaddingName);
+                        + fakeResourcesPathInBrowser + fakeAudioWithPaddingName);
             } else { // Development (docker)
             }
 
             HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
-            chromePrefs.put(
-                    "profile.default_content_setting_values.automatic_downloads",
-                    1);
+            chromePrefs.put("profile.default_content_setting_values.automatic_downloads", 1);
             options.setExperimentalOption("prefs", chromePrefs);
 
             capabilities.setCapability(ChromeOptions.CAPABILITY, options);
@@ -386,23 +325,21 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             }
         }
 
-        BrowserClient browserClient = new BrowserClient(driver, userId,
-                SESSION_ID);
+        BrowserClient browserClient = new BrowserClient(driver, userId, SESSION_ID);
         browserClientList.add(browserClient);
 
         try {
             uploadFakeResourcesForTest(browserClient);
         } catch (Exception e) {
-            String msg = "Error on upload fake resource for test on user "
-                    + userId + " session " + SESSION_ID + ": " + e.getMessage();
+            String msg = "Error on upload fake resource for test on user " + userId + " session "
+                    + SESSION_ID + ": " + e.getMessage();
             throw new IOException(msg);
         }
     }
 
     private void openSutAndWaitForEventsInBrowsers() {
         final List<Runnable> browserThreads = new ArrayList<>();
-        waitForSessionReadyLatch = new CountDownLatchWithException(
-                browserClientList.size());
+        waitForSessionReadyLatch = new CountDownLatchWithException(browserClientList.size());
 
         for (BrowserClient browserClient : browserClientList) {
             browserThreads.add(() -> {
@@ -411,8 +348,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     waitForSessionReadyLatch.countDown();
                 } catch (TimeoutException | IOException | NullPointerException
                         | SessionNotCreatedException e) {
-                    logger.error("Error on start browser of user {}: {}",
-                            browserClient.getUserId(), e.getMessage());
+                    logger.error("Error on start browser of user {}: {}", browserClient.getUserId(),
+                            e.getMessage());
                     waitForSessionReadyLatch.abort(e.getMessage());
                 }
             });
@@ -427,25 +364,20 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
                     "Waiting for all browsers are fully ready (sut url opened and all events received)");
             waitForSessionReadyLatch.await();
         } catch (AbortedException e) {
-            logger.error("Some browser does not have a stable session: {}",
-                    e.getMessage());
-            Assertions.fail("Session did not reach stable status in timeout: "
-                    + e.getMessage());
+            logger.error("Some browser does not have a stable session: {}", e.getMessage());
+            Assertions.fail("Session did not reach stable status in timeout: " + e.getMessage());
             return;
         }
 
-        logger.info(
-                "All browsers are now fully ready! (sut url opened and all events received)");
+        logger.info("All browsers are now fully ready! (sut url opened and all events received)");
     }
 
     private void openSutAndWaitForEvents(BrowserClient browserClient)
             throws TimeoutException, IOException, SessionNotCreatedException {
-        String publicUrl = OPENVIDU_SUT_URL
-                + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
+        String publicUrl = OPENVIDU_SUT_URL + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
 
-        String completeUrl = OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl
-                + "&secret=" + OPENVIDU_SECRET + "&sessionId="
-                + browserClient.getSession() + "&userId="
+        String completeUrl = OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl + "&secret="
+                + OPENVIDU_SECRET + "&sessionId=" + browserClient.getSession() + "&userId="
                 + browserClient.getUserId();
 
         String noUseAWS = System.getProperty("noUseAWS");
@@ -453,10 +385,9 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         } else { // Development (docker)
             String sutHost = System.getenv("ET_SUT_HOST");
 
-            completeUrl = "https://" + sutHost + ":5000?publicurl=https://"
-                    + sutHost + ":4443/&secret=" + OPENVIDU_SECRET
-                    + "&sessionId=" + browserClient.getSession() + "&userId="
-                    + browserClient.getUserId();
+            completeUrl = "https://" + sutHost + ":5000?publicurl=https://" + sutHost
+                    + ":4443/&secret=" + OPENVIDU_SECRET + "&sessionId="
+                    + browserClient.getSession() + "&userId=" + browserClient.getUserId();
         }
 
         browserClient.getDriver().get(completeUrl);
@@ -468,9 +399,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             browserClient.waitForEvent("streamCreated", USERS_BY_SESSION);
             browserClient.stopEventPolling();
         } catch (TimeoutException | NullPointerException e) {
-            String msg = "Error on waiting for events on user "
-                    + browserClient.getUserId() + " session "
-                    + browserClient.getSession() + ": " + e.getMessage();
+            String msg = "Error on waiting for events on user " + browserClient.getUserId()
+                    + " session " + browserClient.getSession() + ": " + e.getMessage();
             if (e instanceof TimeoutException) {
                 throw new TimeoutException(msg);
             } else if (e instanceof NullPointerException) {
@@ -480,10 +410,8 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             }
         }
     }
-    
-    
-    public void uploadFakeResourcesForTest(BrowserClient browser)
-            throws Exception {
+
+    public void uploadFakeResourcesForTest(BrowserClient browser) throws Exception {
         String videoUrl = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
         String audioUrl = "http://public.openvidu.io/fakeaudio_with_padding.wav";
 
@@ -498,22 +426,18 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         return "/home/ubuntu/Downloads/" + fileName;
     }
 
-
     public String startWebRTCQoEMeter(String presenterPath, String viewerPath,
-            BrowserClient user1BrowserClient, BrowserClient user2BrowserClient)
-            throws Exception {
+            BrowserClient user1BrowserClient, BrowserClient user2BrowserClient) throws Exception {
         if (EUS_URL != null) {
-            logger.info("Starting WebRTC QoE Meter for user {}",
-                    user1BrowserClient.getUserId());
+            logger.info("Starting WebRTC QoE Meter for user {}", user1BrowserClient.getUserId());
 
-            SessionId user1SessionId = ((RemoteWebDriver) user1BrowserClient
-                    .getDriver()).getSessionId();
-            SessionId user2SessionId = ((RemoteWebDriver) user2BrowserClient
-                    .getDriver()).getSessionId();
+            SessionId user1SessionId = ((RemoteWebDriver) user1BrowserClient.getDriver())
+                    .getSessionId();
+            SessionId user2SessionId = ((RemoteWebDriver) user2BrowserClient.getDriver())
+                    .getSessionId();
 
             String url = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            url += "session/" + user1SessionId.toString()
-                    + "/webrtc/qoe/meter/start";
+            url += "session/" + user1SessionId.toString() + "/webrtc/qoe/meter/start";
 
             url += "?presenterPath=" + presenterPath;
             url += "&presenterSessionId=" + user1SessionId;
@@ -524,20 +448,16 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
             String id = new String(response);
 
-            logger.info(
-                    "Started WebRTC QoE Meter for user {} successfully! Id {}",
+            logger.info("Started WebRTC QoE Meter for user {} successfully! Id {}",
                     user1BrowserClient.getUserId(), id);
 
             return id;
         }
         return null;
     }
-    
-    
-    
 
-    private void recordAndDownloadBrowserVideo(BrowserClient browser,
-            String localRecorderId) throws Exception {
+    private void recordAndDownloadBrowserVideo(BrowserClient browser, String localRecorderId)
+            throws Exception {
         browser.startRecording(localRecorderId);
 
         // seconds
@@ -554,38 +474,46 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
         browser.downloadRecording(localRecorderId);
     }
 
+    private void recordAndDownloadBrowserVideoInNewThread(List<Runnable> browserThreads,
+            CountDownLatchWithException waitForRecording, String errorMsg, BrowserClient browser,
+            String localRecorderId) {
+        browserThreads.add(() -> {
+            try {
+                recordAndDownloadBrowserVideo(browser, localRecorderId);
+                waitForRecording.countDown();
+            } catch (Exception e) {
+                logger.error("{}: {}", errorMsg, e.getMessage());
+                waitForRecording.abort(e.getMessage());
+            }
+        });
+    }
+
     @SuppressWarnings("unchecked")
-    public Map<String, byte[]> waitForCSV(String qoeServiceId,
-            BrowserClient browserClient) throws Exception {
+    public Map<String, byte[]> waitForCSV(String qoeServiceId, BrowserClient browserClient)
+            throws Exception {
         if (EUS_URL != null) {
             // 20min
             int timeoutSeconds = 1800;
-            long endWaitTime = System.currentTimeMillis()
-                    + timeoutSeconds * 1000;
+            long endWaitTime = System.currentTimeMillis() + timeoutSeconds * 1000;
 
             final String userId = browserClient.getUserId();
-            logger.info(
-                    "Waiting for CSV generated in WebRTC QoE Meter (timeout {}s) for user {}",
+            logger.info("Waiting for CSV generated in WebRTC QoE Meter (timeout {}s) for user {}",
                     timeoutSeconds, userId);
 
-            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
-                    .getSessionId();
+            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver()).getSessionId();
 
             String urlPrefix = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            urlPrefix += "session/" + sessionId.toString()
-                    + "/webrtc/qoe/meter/" + qoeServiceId;
+            urlPrefix += "session/" + sessionId.toString() + "/webrtc/qoe/meter/" + qoeServiceId;
             String url = urlPrefix + "/csv/isgenerated";
 
             String response;
 
             do {
                 response = new String(restClient.sendGet(url));
-                logger.info(
-                        "CSV not generated yet for user {}, waiting... Response: {}",
-                        userId, response);
+                logger.info("CSV not generated yet for user {}, waiting... Response: {}", userId,
+                        response);
                 sleep(4500);
-            } while (System.currentTimeMillis() < endWaitTime
-                    && !"true".equals(response));
+            } while (System.currentTimeMillis() < endWaitTime && !"true".equals(response));
             logger.info("CSV Generated for user {} successfully", userId);
 
             url = urlPrefix + "/csv";
@@ -594,35 +522,31 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             Map<String, byte[]> csvFiles = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(
-                        DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                        false);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-                csvFiles = (Map<String, byte[]>) objectMapper.readValue(
-                        response, new TypeReference<Map<String, byte[]>>() {
+                csvFiles = (Map<String, byte[]>) objectMapper.readValue(response,
+                        new TypeReference<Map<String, byte[]>>() {
                         });
 
                 return csvFiles;
             } catch (IOException e) {
-                throw new Exception("Error during CSV list conversion for user "
-                        + userId + ": " + e.getMessage());
+                throw new Exception("Error during CSV list conversion for user " + userId + ": "
+                        + e.getMessage());
             }
         }
         return null;
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Double> getMetric(String qoeServiceId,
-            BrowserClient browserClient) throws Exception {
+    public Map<String, Double> getMetric(String qoeServiceId, BrowserClient browserClient)
+            throws Exception {
         if (EUS_URL != null) {
             logger.info("Getting metric generated in WebRTC QoE Meter");
 
-            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver())
-                    .getSessionId();
+            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver()).getSessionId();
 
             String urlPrefix = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            urlPrefix += "session/" + sessionId.toString()
-                    + "/webrtc/qoe/meter/" + qoeServiceId;
+            urlPrefix += "session/" + sessionId.toString() + "/webrtc/qoe/meter/" + qoeServiceId;
 
             String url = urlPrefix + "/metric";
             String response = new String(restClient.sendGet(url));
@@ -630,9 +554,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
             Map<String, Double> metrics = null;
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(
-                        DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                        false);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
                 metrics = (Map<String, Double>) objectMapper.readValue(response,
                         new TypeReference<Map<String, Double>>() {
@@ -640,8 +562,7 @@ public class OpenviduWebRTCQoEMeter extends RecordingBaseTest {
 
                 return metrics;
             } catch (IOException e) {
-                throw new Exception(
-                        "Error during CSV list conversion: " + e.getMessage());
+                throw new Exception("Error during CSV list conversion: " + e.getMessage());
             }
         }
         return null;
