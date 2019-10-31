@@ -295,21 +295,10 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
 
     private void openSutAndWaitForEvents(BrowserClient browserClient)
             throws TimeoutException, IOException, SessionNotCreatedException {
-        String publicUrl = OPENVIDU_SUT_URL + (OPENVIDU_SUT_URL.endsWith("/") ? "" : "/");
-
-        String completeUrl = OPENVIDU_WEBAPP_URL + "?publicurl=" + publicUrl + "&secret="
-                + OPENVIDU_SECRET + "&sessionId=" + browserClient.getSession() + "&userId="
+        String completeUrl = OPENVIDU_PROTOCOL_AND_HOST_URL + ":5000?publicurl="
+                + OPENVIDU_PROTOCOL_AND_HOST_URL + ":4443/&secret=" + OPENVIDU_SECRET
+                + "&sessionId=" + browserClient.getSession() + "&userId="
                 + browserClient.getUserId();
-
-        String noUseAWS = System.getProperty("noUseAWS");
-        if (noUseAWS == null || !"true".equals(noUseAWS)) {
-        } else { // Development (docker)
-            String sutHost = System.getenv("ET_SUT_HOST");
-
-            completeUrl = "https://" + sutHost + ":5000?publicurl=https://" + sutHost
-                    + ":4443/&secret=" + OPENVIDU_SECRET + "&sessionId="
-                    + browserClient.getSession() + "&userId=" + browserClient.getUserId();
-        }
 
         browserClient.getDriver().get(completeUrl);
         browserClient.startEventPolling(true, false);

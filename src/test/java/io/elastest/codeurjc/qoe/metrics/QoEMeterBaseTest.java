@@ -33,7 +33,7 @@ public class QoEMeterBaseTest {
 
     public static String OPENVIDU_SECRET = "MY_SECRET";
     protected static String OPENVIDU_SUT_URL;
-    protected static String OPENVIDU_WEBAPP_URL;
+    protected static String OPENVIDU_PROTOCOL_AND_HOST_URL;
 
     public static int SECONDS_OF_WAIT = 40;
     public static int BROWSER_POLL_INTERVAL = 1000;
@@ -83,13 +83,13 @@ public class QoEMeterBaseTest {
             sutProtocol = sutProtocol != null && !"".equals(sutProtocol) ? sutProtocol : "https";
 
             OPENVIDU_SUT_URL = sutProtocol + "://" + sutHost + ":" + sutPort;
-            OPENVIDU_WEBAPP_URL = sutProtocol + "://" + sutHost;
+            OPENVIDU_PROTOCOL_AND_HOST_URL = sutProtocol + "://" + sutHost;
         } else {
             throw new Exception("No Sut URL");
         }
 
         logger.info("OpenVidu Sut URL: {}", OPENVIDU_SUT_URL);
-        logger.info("OpenVidu Webapp URL: {}", OPENVIDU_WEBAPP_URL);
+        logger.info("OpenVidu Webapp URL: {}", OPENVIDU_PROTOCOL_AND_HOST_URL);
 
         /* ************************************ */
         /* ************* EUS init ************* */
@@ -103,7 +103,7 @@ public class QoEMeterBaseTest {
             logger.info("Using EUS URL: {}", EUS_URL);
         }
 
-        if (OPENVIDU_WEBAPP_URL == null || OPENVIDU_WEBAPP_URL.isEmpty()) {
+        if (OPENVIDU_PROTOCOL_AND_HOST_URL == null || OPENVIDU_PROTOCOL_AND_HOST_URL.isEmpty()) {
             throw new Exception(
                     "OpenVidu WebApp Url is empty, probably because the stack was not obtained correctly");
         }
