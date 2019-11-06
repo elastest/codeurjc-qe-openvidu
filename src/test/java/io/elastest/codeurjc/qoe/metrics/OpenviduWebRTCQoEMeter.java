@@ -299,6 +299,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
                 + OPENVIDU_PROTOCOL_AND_HOST_URL + ":4443/&secret=" + OPENVIDU_SECRET
                 + "&sessionId=" + browserClient.getSession() + "&userId="
                 + browserClient.getUserId();
+        logger.info("Opening url: {}", completeUrl);
 
         browserClient.getDriver().get(completeUrl);
         browserClient.startEventPolling(true, false);

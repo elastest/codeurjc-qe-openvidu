@@ -323,6 +323,8 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
                     + browserClient.getSession() + "&userId=" + browserClient.getUserId();
         }
 
+        logger.info("Opening url: {}", completeUrl);
+
         browserClient.getDriver().get(completeUrl);
         browserClient.startEventPolling(true, false);
 
