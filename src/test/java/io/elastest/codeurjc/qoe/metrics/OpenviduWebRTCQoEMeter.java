@@ -349,16 +349,20 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
         Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
 
         if (csvMap == null || csvMap.size() == 0) {
-            Assertions.fail(
-                    "Csv files List is null or empty for user " + publisherBrowser.getUserId());
+            final String message = "Csv files List is null or empty for user "
+                    + publisherBrowser.getUserId();
+            Assertions.fail(message);
+            throw new Exception(message);
         }
 
         // Get Metrics
         Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
 
         if (metrics == null || metrics.size() == 0) {
-            Assertions.fail(
-                    "Metric files List is null or empty for user " + publisherBrowser.getUserId());
+            final String message = "Metric files List is null or empty for user "
+                    + publisherBrowser.getUserId();
+            Assertions.fail(message);
+            throw new Exception(message);
         }
     }
 
