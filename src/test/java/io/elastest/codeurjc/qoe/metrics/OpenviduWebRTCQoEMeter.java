@@ -130,8 +130,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
                 logger.info("All QoE metrics are generated and attached!");
             } catch (AbortedException e) {
                 logger.error("Some QoE metrics has failed: {}", e.getMessage());
-                Assertions.fail("Some QoE metrics has failed: " + e.getMessage());
-                return;
+                throw new Exception("Some QoE metrics has failed: " + e.getMessage());
             }
 
             sleep(20000);
