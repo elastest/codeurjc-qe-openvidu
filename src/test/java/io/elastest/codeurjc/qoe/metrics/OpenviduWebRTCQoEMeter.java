@@ -470,8 +470,8 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
     public Map<String, byte[]> waitForCSV(String qoeServiceId, BrowserClient browserClient)
             throws Exception {
         if (EUS_URL != null) {
-            // 20min
-            int timeoutSeconds = 1800;
+            // 40min
+            int timeoutSeconds = 2400;
             long endWaitTime = System.currentTimeMillis() + timeoutSeconds * 1000;
 
             final String userId = browserClient.getUserId();
@@ -490,7 +490,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
                 response = new String(restClient.sendGet(url));
                 logger.info("CSV not generated yet for user {}, waiting... Response: {}", userId,
                         response);
-                sleep(4500);
+                sleep(5000);
             } while (System.currentTimeMillis() < endWaitTime && !"true".equals(response));
             logger.info("CSV Generated for user {} successfully", userId);
 
