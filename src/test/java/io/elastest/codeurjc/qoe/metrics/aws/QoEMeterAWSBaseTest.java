@@ -124,7 +124,7 @@ public class QoEMeterAWSBaseTest {
 		String secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY");
 		String accessKeyId = System.getenv("AWS_ACCESS_KEY_ID");
 		String sshPrivateKey = System.getenv("AWS_SSH_PRIVATE_KEY");
-		logger.debug("sshPrivateKey {}", sshPrivateKey);
+		logger.info("sshPrivateKey {}", sshPrivateKey);
 
 		// Instances config
 		String keyName = System.getenv("AWS_KEY_NAME");
