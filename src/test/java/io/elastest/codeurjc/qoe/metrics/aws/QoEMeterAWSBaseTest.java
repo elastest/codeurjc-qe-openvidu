@@ -42,8 +42,12 @@ public class QoEMeterAWSBaseTest {
 	public static int SECONDS_OF_WAIT = 40;
 	public static int BROWSER_POLL_INTERVAL = 1000;
 
+	protected static boolean WITH_PACKET_LOSS = false;
+
 	protected static String EUS_URL;
 	protected static String ET_ETM_TJOB_ATTACHMENT_API;
+	protected static String EIM_API;
+	protected static String EIM_SUT_AGENT_ID;
 
 	protected static List<BrowserClient> browserClientList;
 
@@ -63,6 +67,7 @@ public class QoEMeterAWSBaseTest {
 		String openviduSecret = System.getenv("OPENVIDU_SECRET");
 		String secondsOfWait = System.getenv("SECONDS_OF_WAIT");
 		String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
+		String withPacketLoss = System.getenv("WITH_PACKET_LOSS");
 
 		if (openviduSecret != null) {
 			OPENVIDU_SECRET = openviduSecret;
@@ -75,6 +80,9 @@ public class QoEMeterAWSBaseTest {
 			BROWSER_POLL_INTERVAL = Integer.parseInt(browserPollInterval);
 		}
 
+		if (withPacketLoss != null) {
+			WITH_PACKET_LOSS = withPacketLoss.equals("true") ? true : false;
+		}
 	}
 
 	@BeforeAll
@@ -114,6 +122,27 @@ public class QoEMeterAWSBaseTest {
 			WebDriverManager.chromedriver().setup();
 		} else {
 			logger.info("Using EUS URL: {}", EUS_URL);
+		}
+
+		/* ************************************ */
+		/* ************* EIM init ************* */
+		/* ************************************ */
+		EIM_API = System.getenv("ET_EIM_API");
+
+		if (EIM_API == null) {
+			logger.warn("NOT Using EIM");
+			WebDriverManager.chromedriver().setup();
+		} else {
+			logger.info("Using EIM API URL: {}", EIM_API);
+		}
+
+		EIM_SUT_AGENT_ID = System.getenv("ET_EIM_SUT_AGENT_ID");
+
+		if (EIM_SUT_AGENT_ID == null) {
+			logger.warn("Sut without EIM agent id");
+			WebDriverManager.chromedriver().setup();
+		} else {
+			logger.info("Using EIM SUT Agent id: {}", EIM_SUT_AGENT_ID);
 		}
 
 		/* *************************************** */
