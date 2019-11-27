@@ -559,7 +559,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		JsonObject jsonBody = new JsonObject();
 		jsonBody.addProperty("exec", "EXECBEAT");
 		jsonBody.addProperty("component", "EIM");
-		jsonBody.addProperty("packetLoss", "0.1");
+		jsonBody.addProperty("packetLoss", "0.4");
 		jsonBody.addProperty("stressNg", "");
 		jsonBody.addProperty("dockerized", "yes");
 		jsonBody.addProperty("cronExpression", "@every 60s");
