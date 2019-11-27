@@ -554,7 +554,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		logger.info("With packetloss!");
 
 		String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
-		url += "controllability/" + EIM_SUT_AGENT_ID + "/packetloss";
+		url += "agent/controllability/" + EIM_SUT_AGENT_ID + "/packetloss";
 
 		JsonObject jsonBody = new JsonObject();
 		jsonBody.addProperty("exec", "EXECBEAT");
