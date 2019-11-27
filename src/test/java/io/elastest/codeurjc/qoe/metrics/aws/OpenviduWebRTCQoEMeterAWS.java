@@ -554,13 +554,13 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		logger.info("With packetloss!");
 
 		String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
-		url += "controllability/" + EIM_SUT_AGENT_ID + "/stress";
+		url += "controllability/" + EIM_SUT_AGENT_ID + "/packetloss";
 
 		JsonObject jsonBody = new JsonObject();
 		jsonBody.addProperty("exec", "EXECBEAT");
 		jsonBody.addProperty("component", "EIM");
-		jsonBody.addProperty("packetLoss", "");
-		jsonBody.addProperty("stressNg", "1");
+		jsonBody.addProperty("packetLoss", "0.1");
+		jsonBody.addProperty("stressNg", "");
 		jsonBody.addProperty("dockerized", "yes");
 		jsonBody.addProperty("cronExpression", "@every 60s");
 
