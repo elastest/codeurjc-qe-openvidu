@@ -547,11 +547,11 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 	}
 
 	public void packetloss() throws Exception {
-		if (EIM_API == null || EIM_SUT_AGENT_ID == null) {
+		if (EIM_API == null || EIM_SUT_AGENT_ID == null || PACKET_LOSS_VALUE == null) {
 			throw new Exception("EIM API or Sut agent Id is null");
 		}
 
-		logger.info("With packetloss!");
+		logger.info("With packetloss: {}", PACKET_LOSS_VALUE);
 
 		String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
 		url += "agent/controllability/" + EIM_SUT_AGENT_ID + "/packetloss";
@@ -559,7 +559,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		JsonObject jsonBody = new JsonObject();
 		jsonBody.addProperty("exec", "EXECBEAT");
 		jsonBody.addProperty("component", "EIM");
-		jsonBody.addProperty("packetLoss", "0.4");
+		jsonBody.addProperty("packetLoss", PACKET_LOSS_VALUE);
 		jsonBody.addProperty("stressNg", "");
 		jsonBody.addProperty("dockerized", "yes");
 		jsonBody.addProperty("cronExpression", "@every 60s");
