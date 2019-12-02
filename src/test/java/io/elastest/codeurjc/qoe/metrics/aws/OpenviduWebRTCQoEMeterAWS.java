@@ -73,6 +73,10 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 				packetloss();
 			}
 
+			if (WITH_STRESS) {
+				stress();
+			}
+
 			// Record and download Subscriber/Publisher videos
 			recordAndDownloadUser1AndUser2Videos(user1Browser, user2Browser, user1InUser1LocalRecorderId,
 					user1InUser2LocalRecorderId, user2InUser2LocalRecorderId, user2InUser1LocalRecorderId);
@@ -561,6 +565,27 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		jsonBody.addProperty("component", "EIM");
 		jsonBody.addProperty("packetLoss", PACKET_LOSS_VALUE);
 		jsonBody.addProperty("stressNg", "");
+		jsonBody.addProperty("dockerized", "yes");
+		jsonBody.addProperty("cronExpression", "@every 60s");
+
+		restClient.sendPost(url, jsonBody.toString());
+	}
+
+	public void stress() throws Exception {
+		if (EIM_API == null || EIM_SUT_AGENT_ID == null || STRESS_VALUE == null) {
+			throw new Exception("EIM API or Sut agent Id is null");
+		}
+
+		logger.info("With packetloss: {}", STRESS_VALUE);
+
+		String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
+		url += "agent/controllability/" + EIM_SUT_AGENT_ID + "/stress";
+
+		JsonObject jsonBody = new JsonObject();
+		jsonBody.addProperty("exec", "EXECBEAT");
+		jsonBody.addProperty("component", "EIM");
+		jsonBody.addProperty("packetLoss", "");
+		jsonBody.addProperty("stressNg", STRESS_VALUE);
 		jsonBody.addProperty("dockerized", "yes");
 		jsonBody.addProperty("cronExpression", "@every 60s");
 

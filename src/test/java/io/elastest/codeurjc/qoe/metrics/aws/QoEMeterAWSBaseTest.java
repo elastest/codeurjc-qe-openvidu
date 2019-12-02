@@ -43,12 +43,14 @@ public class QoEMeterAWSBaseTest {
 	public static int BROWSER_POLL_INTERVAL = 1000;
 
 	protected static boolean WITH_PACKET_LOSS = false;
+	protected static boolean WITH_STRESS = false;
 
 	protected static String EUS_URL;
 	protected static String ET_ETM_TJOB_ATTACHMENT_API;
 	protected static String EIM_API;
 	protected static String EIM_SUT_AGENT_ID;
 	protected static String PACKET_LOSS_VALUE = "0.01";
+	protected static String STRESS_VALUE = "1";
 
 	protected static List<BrowserClient> browserClientList;
 
@@ -70,6 +72,8 @@ public class QoEMeterAWSBaseTest {
 		String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
 		String withPacketLoss = System.getenv("WITH_PACKET_LOSS");
 		String packetLossValue = System.getenv("PACKET_LOSS_VALUE");
+		String withStress = System.getenv("WITH_STRESS");
+		String stressValue = System.getenv("STRESS_VALUE");
 
 		if (openviduSecret != null) {
 			OPENVIDU_SECRET = openviduSecret;
@@ -88,6 +92,14 @@ public class QoEMeterAWSBaseTest {
 
 		if (packetLossValue != null) {
 			PACKET_LOSS_VALUE = packetLossValue;
+		}
+
+		if (withStress != null) {
+			WITH_STRESS = withStress.equals("true") ? true : false;
+		}
+
+		if (stressValue != null) {
+			STRESS_VALUE = stressValue;
 		}
 	}
 
