@@ -576,7 +576,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 			throw new Exception("EIM API or Sut agent Id is null");
 		}
 
-		logger.info("With packetloss: {}", STRESS_VALUE);
+		logger.info("With stress: {}", STRESS_VALUE);
 
 		String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
 		url += "agent/controllability/" + EIM_SUT_AGENT_ID + "/stress";
