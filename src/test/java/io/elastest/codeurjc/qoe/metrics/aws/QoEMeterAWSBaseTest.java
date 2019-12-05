@@ -51,7 +51,7 @@ public class QoEMeterAWSBaseTest {
     protected static String EIM_SUT_AGENT_ID;
     protected static String PACKET_LOSS_VALUE = "0.01";
     protected static String STRESS_VALUE = "1";
-    protected static String CRON_EXPESION = "60s";
+    protected static String CRON_EXPRESSION = "60s";
 
     protected static List<BrowserClient> browserClientList;
 
@@ -75,7 +75,7 @@ public class QoEMeterAWSBaseTest {
         String packetLossValue = System.getenv("PACKET_LOSS_VALUE");
         String withStress = System.getenv("WITH_STRESS");
         String stressValue = System.getenv("STRESS_VALUE");
-        String cronExpression = System.getenv("CRON_EXPESION");
+        String cronExpression = System.getenv("CRON_EXPRESSION");
 
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
@@ -105,7 +105,7 @@ public class QoEMeterAWSBaseTest {
         }
 
         if (cronExpression != null) {
-            CRON_EXPESION = cronExpression;
+            CRON_EXPRESSION = cronExpression;
         }
     }
 
