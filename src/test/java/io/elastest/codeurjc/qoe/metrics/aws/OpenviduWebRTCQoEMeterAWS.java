@@ -566,7 +566,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		jsonBody.addProperty("packetLoss", PACKET_LOSS_VALUE);
 		jsonBody.addProperty("stressNg", "");
 		jsonBody.addProperty("dockerized", "yes");
-		jsonBody.addProperty("cronExpression", "@every 60s");
+		jsonBody.addProperty("cronExpression", "@every 60m");
 
 		restClient.sendPost(url, jsonBody.toString());
 	}
@@ -587,7 +587,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 		jsonBody.addProperty("packetLoss", "");
 		jsonBody.addProperty("stressNg", STRESS_VALUE);
 		jsonBody.addProperty("dockerized", "yes");
-		jsonBody.addProperty("cronExpression", "@every 60s");
+		jsonBody.addProperty("cronExpression", "@every 60m");
 
 		restClient.sendPost(url, jsonBody.toString());
 	}
