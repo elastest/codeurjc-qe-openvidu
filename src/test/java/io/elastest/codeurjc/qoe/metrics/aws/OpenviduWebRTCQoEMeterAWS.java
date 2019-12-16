@@ -148,6 +148,11 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
             e.printStackTrace();
             Assertions.fail(e.getMessage());
             waitForSessionReadyLatch.abort(e.getMessage());
+        } finally {
+            try {
+                removePacketloss();
+            } catch (Exception e) {
+            }
         }
 
         logger.info("End");
@@ -594,9 +599,23 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
         jsonBody.addProperty("packetLoss", PACKET_LOSS_VALUE);
         jsonBody.addProperty("stressNg", "");
         jsonBody.addProperty("dockerized", "yes");
-        jsonBody.addProperty("cronExpression", "@every " + CRON_EXPRESSION);
+        jsonBody.addProperty("cronExpression",
+                CRON_EXPRESSION == null ? "" : "@every " + CRON_EXPRESSION);
 
         restClient.sendPost(url, jsonBody.toString());
+    }
+
+    public void removePacketloss() throws Exception {
+        if (EIM_API == null || EIM_SUT_AGENT_ID == null || PACKET_LOSS_VALUE == null) {
+            throw new Exception("EIM API or Sut agent Id is null");
+        }
+
+        logger.info("Removing packetloss: {}", PACKET_LOSS_VALUE);
+
+        String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
+        url += "agent/" + EIM_SUT_AGENT_ID + "/unchecked";
+
+        restClient.delete(url);
     }
 
     public void stress() throws Exception {
@@ -615,8 +634,22 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
         jsonBody.addProperty("packetLoss", "");
         jsonBody.addProperty("stressNg", STRESS_VALUE);
         jsonBody.addProperty("dockerized", "yes");
-        jsonBody.addProperty("cronExpression", "@every " + CRON_EXPRESSION);
+        jsonBody.addProperty("cronExpression",
+                CRON_EXPRESSION == null ? "" : "@every " + CRON_EXPRESSION);
 
         restClient.sendPost(url, jsonBody.toString());
     }
+
+//    public void removeStress() throws Exception {
+//        if (EIM_API == null || EIM_SUT_AGENT_ID == null || STRESS_VALUE == null) {
+//            throw new Exception("EIM API or Sut agent Id is null");
+//        }
+//
+//        logger.info("Removing stress: {}", STRESS_VALUE);
+//
+//        String url = EIM_API.endsWith("/") ? EIM_API : EIM_API + "/";
+//        url += "agent/controllability/" + EIM_SUT_AGENT_ID + "/stress";
+//
+//        restClient.delete(url);
+//    }
 }

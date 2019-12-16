@@ -51,7 +51,7 @@ public class QoEMeterAWSBaseTest {
     protected static String EIM_SUT_AGENT_ID;
     protected static String PACKET_LOSS_VALUE = "0.01";
     protected static String STRESS_VALUE = "1";
-    protected static String CRON_EXPRESSION = "60s";
+    protected static String CRON_EXPRESSION = null;
 
     protected static List<BrowserClient> browserClientList;
 
