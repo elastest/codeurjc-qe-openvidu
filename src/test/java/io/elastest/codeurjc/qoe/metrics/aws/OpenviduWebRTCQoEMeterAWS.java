@@ -485,6 +485,8 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
         }
 
         browser.stopRecording(localRecorderId);
+        
+        sleep(5000);
 
         browser.downloadRecording(localRecorderId);
     }
