@@ -11,6 +11,9 @@ import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -51,6 +54,9 @@ public class BrowserClient {
     private Map<String, AtomicInteger> numEvents;
     private Map<String, CountDownLatch> eventCountdowns;
 
+    private Map<String, List<JsonObject>> receivedEventsMap;
+    private List<String> qoeServiceIds;
+
     JsonParser jsonParser = new JsonParser();
 
     public BrowserClient(WebDriver driver, String userId, int session) {
@@ -61,7 +67,9 @@ public class BrowserClient {
         this.eventQueue = new ConcurrentLinkedQueue<JsonObject>();
         this.numEvents = new ConcurrentHashMap<>();
         this.eventCountdowns = new ConcurrentHashMap<>();
+        this.receivedEventsMap = new HashMap<>();
         this.restClient = new RestClient();
+        this.qoeServiceIds = new ArrayList<>();
     }
 
     public Thread getPollingThread() {
@@ -100,9 +108,16 @@ public class BrowserClient {
         return driver;
     }
 
+    public List<String> getQoeServiceIds() {
+        return qoeServiceIds;
+    }
+
+    public void setQoeServiceIds(List<String> qoeServiceIds) {
+        this.qoeServiceIds = qoeServiceIds;
+    }
+
     public void startEventPolling(boolean processEvents, boolean processStats) {
-        logger.info("Starting event polling in user {} session {}", userId,
-                session);
+        logger.info("Starting event polling in user {} session {}", userId, session);
         this.pollingThread = new Thread(() -> {
             while (!this.stopped.get()) {
                 this.getBrowserEvents(processEvents, processStats);
@@ -116,10 +131,8 @@ public class BrowserClient {
 
         Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread th, Throwable ex) {
-                if (ex.getClass().getSimpleName()
-                        .equals("NoSuchSessionException")) {
-                    logger.error(
-                            "Disposing driver when running 'executeScript'");
+                if (ex.getClass().getSimpleName().equals("NoSuchSessionException")) {
+                    logger.error("Disposing driver when running 'executeScript'");
                 }
             }
         };
@@ -135,20 +148,17 @@ public class BrowserClient {
         this.pollingThread.interrupt();
     }
 
-    public void waitForEvent(String eventName, int eventNumber)
-            throws TimeoutException {
-        logger.info(
-                "Waiting for event {} to occur {} times in user {} session {}",
-                eventName, eventNumber, userId, session);
+    public void waitForEvent(String eventName, int eventNumber) throws TimeoutException {
+        logger.info("Waiting for event {} to occur {} times in user {} session {}", eventName,
+                eventNumber, userId, session);
 
         CountDownLatch eventSignal = new CountDownLatch(eventNumber);
         this.setCountDown(eventName, eventSignal);
         try {
             int timeoutInSecs = 240;
-            if (!eventSignal.await(timeoutInSecs * 1000,
-                    TimeUnit.MILLISECONDS)) {
-                throw (new TimeoutException("Timeout (" + timeoutInSecs
-                        + "sec) in waiting for event " + eventName));
+            if (!eventSignal.await(timeoutInSecs * 1000, TimeUnit.MILLISECONDS)) {
+                throw (new TimeoutException(
+                        "Timeout (" + timeoutInSecs + "sec) in waiting for event " + eventName));
             }
         } catch (TimeoutException e) {
             throw e;
@@ -190,12 +200,19 @@ public class BrowserClient {
         if (processEvents) {
             JsonArray events = getEventsFromObject(eventsAndStats);
             for (JsonElement ev : events) {
+                // { event: 'name', content: content, date: 1581939451510 (sometimes) }
                 JsonObject event = ev.getAsJsonObject();
                 String eventName = event.get("event").getAsString();
-                logger.info("New event received in user {} of session {}: {}",
-                        userId, session, event);
+                logger.info("New event received in user {} of session {}: {}", userId, session,
+                        event);
                 this.eventQueue.add(event);
                 getNumEvents(eventName).incrementAndGet();
+
+                if (!receivedEventsMap.containsKey(eventName)) {
+                    receivedEventsMap.put(eventName, new ArrayList<>());
+                }
+
+                receivedEventsMap.get(eventName).add(event);
 
                 if (this.eventCountdowns.get(eventName) != null) {
                     doCountDown(eventName);
@@ -215,35 +232,30 @@ public class BrowserClient {
                                 JsonObject userStatsObj = (JsonObject) userStatsElement;
                                 for (Entry<String, JsonElement> userSingleStat : userStatsObj
                                         .entrySet()) {
-                                    if (userSingleStat != null && ("jitter"
-                                            .equals(userSingleStat.getKey())
-                                            || "delay".equals(
-                                                    userSingleStat.getKey()
+                                    if (userSingleStat != null
+                                            && ("jitter".equals(userSingleStat.getKey())
+                                                    || "delay".equals(userSingleStat.getKey()
 
-                                            ))) {
-                                        logger.info("User '{}' Stat: {} = {}",
-                                                userId, userSingleStat.getKey(),
-                                                userSingleStat.getValue());
+                                                    ))) {
+                                        logger.info("User '{}' Stat: {} = {}", userId,
+                                                userSingleStat.getKey(), userSingleStat.getValue());
                                     }
                                 }
                             }
                         }
                     }
-
                 }
             }
-
         }
     }
 
     private AtomicInteger getNumEvents(String eventName) {
-        return this.numEvents.computeIfAbsent(eventName,
-                k -> new AtomicInteger(0));
+        return this.numEvents.computeIfAbsent(eventName, k -> new AtomicInteger(0));
     }
 
     private void setCountDown(String eventName, CountDownLatch cd) {
-        logger.info("Setting countDownLatch for event {} in user {} session {}",
-                eventName, userId, session);
+        logger.info("Setting countDownLatch for event {} in user {} session {}", eventName, userId,
+                session);
         this.eventCountdowns.put(eventName, cd);
         for (int i = 0; i < getNumEvents(eventName).get(); i++) {
             doCountDown(eventName);
@@ -251,8 +263,8 @@ public class BrowserClient {
     }
 
     private void doCountDown(String eventName) {
-        logger.info("Doing countdown of event {} in user {} session {}",
-                eventName, userId, session);
+        logger.info("Doing countdown of event {} in user {} session {}", eventName, userId,
+                session);
         this.eventCountdowns.get(eventName).countDown();
 
     }
@@ -271,8 +283,7 @@ public class BrowserClient {
 
     public JsonArray getSubscriberStreams() throws Exception {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
-                "var result = JSON.stringify(getSubscriberStreams());"
-                        + "return result;");
+                "var result = JSON.stringify(getSubscriberStreams());" + "return result;");
         logger.info("Subscriber Streams2 string: {}", streams);
         return jsonParser.parse(streams).getAsJsonArray();
 
@@ -280,8 +291,7 @@ public class BrowserClient {
 
     public JsonArray getPublisherStreams() throws Exception {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
-                "var result = JSON.stringify(getPublisherStreams());"
-                        + "return result;");
+                "var result = JSON.stringify(getPublisherStreams());" + "return result;");
         logger.info("Publisher streams string: {}", streams);
         return jsonParser.parse(streams).getAsJsonArray();
 
@@ -291,77 +301,65 @@ public class BrowserClient {
         try {
             logger.info("Init local recorder from streamId '{}'", streamId);
             String localRecorderId = (String) ((JavascriptExecutor) driver)
-                    .executeScript("var localRecorderId = initLocalRecorder('"
-                            + streamId + "');" + "return localRecorderId;");
+                    .executeScript("var localRecorderId = initLocalRecorder('" + streamId + "');"
+                            + "return localRecorderId;");
             if (localRecorderId == null) {
-                throw new Exception("Local recorder ID from streamId "
-                        + streamId + " is null");
+                throw new Exception("Local recorder ID from streamId " + streamId + " is null");
             }
-            logger.info(
-                    "Local recorder from streamId '{}' has been initialized with ID '{}'",
+            logger.info("Local recorder from streamId '{}' has been initialized with ID '{}'",
                     streamId, localRecorderId);
             return localRecorderId;
         } catch (Exception e) {
-            String msg = "Error on init local recorder for stream " + streamId
-                    + ": " + e.getMessage();
+            String msg = "Error on init local recorder for stream " + streamId + ": "
+                    + e.getMessage();
             throw new Exception(msg);
         }
     }
 
     public void startRecording(String localRecorderId) throws Exception {
         try {
-            logger.info("Starting recording with local recorder Id: {}",
-                    localRecorderId);
-            ((JavascriptExecutor) driver).executeScript(
-                    "startRecording('" + localRecorderId + "');");
-            logger.info(
-                    "Recording with local recorder Id '{}' has been started",
-                    localRecorderId);
+            logger.info("Starting recording with local recorder Id: {}", localRecorderId);
+            ((JavascriptExecutor) driver)
+                    .executeScript("startRecording('" + localRecorderId + "');");
+            logger.info("Recording with local recorder Id '{}' has been started", localRecorderId);
         } catch (Exception e) {
-            String msg = "Error on start recording for localRecorder "
-                    + localRecorderId + ": " + e.getMessage();
+            String msg = "Error on start recording for localRecorder " + localRecorderId + ": "
+                    + e.getMessage();
             throw new Exception(msg);
         }
     }
 
     public void stopRecording(String localRecorderId) throws Exception {
         try {
-            logger.info("Stopping recording with local recorder Id: {}",
-                    localRecorderId);
+            logger.info("Stopping recording with local recorder Id: {}", localRecorderId);
             ((JavascriptExecutor) driver)
                     .executeScript("stopRecording('" + localRecorderId + "');");
-            logger.info(
-                    "Recording with local recorder Id '{}' has been stopped",
-                    localRecorderId);
+            logger.info("Recording with local recorder Id '{}' has been stopped", localRecorderId);
         } catch (Exception e) {
-            String msg = "Error on stop recording for localRecorder "
-                    + localRecorderId + ": " + e.getMessage();
+            String msg = "Error on stop recording for localRecorder " + localRecorderId + ": "
+                    + e.getMessage();
             throw new Exception(msg);
         }
     }
 
     public void downloadRecording(String localRecorderId) throws Exception {
         try {
-            logger.info("Downloading recording with local recorder Id: {}",
-                    localRecorderId);
-            ((JavascriptExecutor) driver).executeScript(
-                    "downloadRecording('" + localRecorderId + "');");
-            logger.info(
-                    "Recording with local recorder Id '{}' has been downloaded",
+            logger.info("Downloading recording with local recorder Id: {}", localRecorderId);
+            ((JavascriptExecutor) driver)
+                    .executeScript("downloadRecording('" + localRecorderId + "');");
+            logger.info("Recording with local recorder Id '{}' has been downloaded",
                     localRecorderId);
         } catch (Exception e) {
-            String msg = "Error on download recording for localRecorder "
-                    + localRecorderId + ": " + e.getMessage();
+            String msg = "Error on download recording for localRecorder " + localRecorderId + ": "
+                    + e.getMessage();
             throw new Exception(msg);
         }
     }
 
     public byte[] getFile(String hubUrl, String completePath) throws Exception {
         if (hubUrl != null) {
-            SessionId sessionId = ((RemoteWebDriver) getDriver())
-                    .getSessionId();
-            logger.info("Getting file {} from browser with session id {}",
-                    completePath, sessionId);
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+            logger.info("Getting file {} from browser with session id {}", completePath, sessionId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += "browserfile/session/" + sessionId + "/" + completePath;
@@ -373,14 +371,12 @@ public class BrowserClient {
     }
 
     @SuppressWarnings("resource")
-    public void uploadFile(String hubUrl, InputStream fileStream,
-            String completeFilePath, String fileName) throws Exception {
+    public void uploadFile(String hubUrl, InputStream fileStream, String completeFilePath,
+            String fileName) throws Exception {
         if (hubUrl != null) {
-            SessionId sessionId = ((RemoteWebDriver) getDriver())
-                    .getSessionId();
-            logger.info(
-                    "Starting upload of file {} to browser with session id {}",
-                    fileName, sessionId);
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+            logger.info("Starting upload of file {} to browser with session id {}", fileName,
+                    sessionId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += "browserfile/session/" + sessionId;
@@ -408,22 +404,19 @@ public class BrowserClient {
             File targetFile = new File(folder + fileName);
             FileInputStream input = new FileInputStream(targetFile);
 
-            logger.info(
-                    "File {} for browser with session id {} converted to byte array!",
-                    fileName, sessionId);
+            logger.info("File {} for browser with session id {} converted to byte array!", fileName,
+                    sessionId);
 
             restClient.postMultipart(url, fileName, IOUtils.toByteArray(input));
         }
     }
 
-    public void uploadFileFromUrl(String hubUrl, String fileUrl,
-            String completeFilePath, String fileName) throws Exception {
+    public void uploadFileFromUrl(String hubUrl, String fileUrl, String completeFilePath,
+            String fileName) throws Exception {
         if (hubUrl != null) {
-            SessionId sessionId = ((RemoteWebDriver) getDriver())
-                    .getSessionId();
-            logger.info(
-                    "Starting upload of file {} to browser with session id {}",
-                    fileName, sessionId);
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+            logger.info("Starting upload of file {} to browser with session id {}", fileName,
+                    sessionId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += "browserfile/session/" + sessionId;
@@ -432,6 +425,28 @@ public class BrowserClient {
             url += "&path=" + completeFilePath;
 
             restClient.sendPost(url, null);
+        }
+    }
+
+    public List<JsonObject> getEventListByName(String eventName) {
+        return receivedEventsMap.get(eventName);
+    }
+
+    public void sendWebRTCQoEMeterMetricsTime(String hubUrl, String qoeServiceId, long startTime,
+            long videoDuration) throws Exception {
+        if (hubUrl != null) {
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+            logger.info("Sending WebRTC QoE metrics time {}", sessionId);
+
+            String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            url += sessionId;
+            url += "/webrtc/qoe/meter/" + qoeServiceId + "/metrics/time";
+
+            JsonObject body = new JsonObject();
+            body.addProperty("startTime", startTime);
+            body.addProperty("videoDuration", videoDuration);
+
+            restClient.sendPost(url, body.getAsString());
         }
     }
 }

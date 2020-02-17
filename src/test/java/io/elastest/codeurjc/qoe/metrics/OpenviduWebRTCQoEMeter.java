@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import io.elastest.codeurjc.qe.openvidu.BrowserClient;
 import io.elastest.codeurjc.qe.openvidu.CountDownLatchWithException;
@@ -34,8 +35,6 @@ import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
     final String fakeResourcesPathInBrowser = "/opt/openvidu/";
-    final String fakeVideoWithPaddingName = "fakevideo_with_padding2.y4m";
-    final String fakeAudioWithPaddingName = "fakeaudio_with_padding.wav";
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
@@ -90,7 +89,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
                     user1InUser2LocalRecorderId);
 
             // Process and generate metrics
-            CountDownLatchWithException waitForRecording = new CountDownLatchWithException(2);
+            CountDownLatchWithException waitForQoEMetrics = new CountDownLatchWithException(2);
 
             final List<Runnable> browserThreads = new ArrayList<>();
 
@@ -99,11 +98,11 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
                 try {
                     startAndProcessVideoMetrics(user1Browser, user2Browser,
                             user1VideoPathInUser1Browser, user1VideoPathInUser2Browser);
-                    waitForRecording.countDown();
+                    waitForQoEMetrics.countDown();
                 } catch (Exception e) {
                     logger.error("Error on process qoe metrics of user {} :{}",
                             user1Browser.getUserId(), e.getMessage());
-                    waitForRecording.abort(e.getMessage());
+                    waitForQoEMetrics.abort(e.getMessage());
                 }
             });
 
@@ -112,11 +111,11 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
                 try {
                     startAndProcessVideoMetrics(user2Browser, user1Browser,
                             user2VideoPathInUser2Browser, user2VideoPathInUser1Browser);
-                    waitForRecording.countDown();
+                    waitForQoEMetrics.countDown();
                 } catch (Exception e) {
                     logger.error("Error on process qoe metrics of user {} :{}",
                             user2Browser.getUserId(), e.getMessage());
-                    waitForRecording.abort(e.getMessage());
+                    waitForQoEMetrics.abort(e.getMessage());
                 }
             });
 
@@ -126,7 +125,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
 
             try {
                 logger.info("Waiting for QoE metrics generated and attached");
-                waitForRecording.await();
+                waitForQoEMetrics.await();
                 logger.info("All QoE metrics are generated and attached!");
             } catch (AbortedException e) {
                 logger.error("Some QoE metrics has failed: {}", e.getMessage());
@@ -134,6 +133,13 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
             }
 
             sleep(20000);
+
+            // Browser 1
+            sendWebRTCQoEMeterMetricsTime(user1Browser);
+
+            // Browser 2
+            sendWebRTCQoEMeterMetricsTime(user2Browser);
+
         } catch (Exception e) {
             e.printStackTrace();
             Assertions.fail(e.getMessage());
@@ -150,6 +156,19 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
             logger.error("Browsers threads could not be finished after 5 minutes");
             Assertions.fail(e.getMessage());
             return;
+        }
+    }
+
+    private void sendWebRTCQoEMeterMetricsTime(BrowserClient userBrowser) throws Exception {
+        List<JsonObject> events = userBrowser.getEventListByName("streamPlaying");
+
+        if (events != null) {
+            JsonObject event = events.get(0);
+            Long startEmisionDate = Long.valueOf(event.get("date").getAsString());
+            long startTime = startEmisionDate + FAKE_VIDEO_AND_AUDIO_PADDING_DURATION;
+            userBrowser.sendWebRTCQoEMeterMetricsTime(EUS_URL,
+                    userBrowser.getQoeServiceIds().get(0), startTime,
+                    FAKE_VIDEO_AND_AUDIO_DURATION);
         }
     }
 
@@ -218,10 +237,10 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
 
             // This flag sets the video input (with padding)
             options.addArguments("--use-file-for-fake-video-capture=" + fakeResourcesPathInBrowser
-                    + fakeVideoWithPaddingName);
+                    + FAKE_VIDEO_WITH_PADDING_NAME);
             // This flag sets the audio input
             options.addArguments("--use-file-for-fake-audio-capture=" + fakeResourcesPathInBrowser
-                    + fakeAudioWithPaddingName);
+                    + FAKE_AUDIO_WITH_PADDING_NAME);
 
             HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
             chromePrefs.put("profile.default_content_setting_values.automatic_downloads", 1);
@@ -307,6 +326,8 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
             browserClient.waitForEvent("connectionCreated", USERS_BY_SESSION);
             browserClient.waitForEvent("accessAllowed", 1);
             browserClient.waitForEvent("streamCreated", USERS_BY_SESSION);
+            browserClient.waitForEvent("streamPlaying", 1);
+
             browserClient.stopEventPolling();
         } catch (TimeoutException | NullPointerException e) {
             String msg = "Error on waiting for events on user " + browserClient.getUserId()
@@ -322,13 +343,10 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
     }
 
     public void uploadFakeResourcesForTest(BrowserClient browser) throws Exception {
-        String videoUrl = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
-        String audioUrl = "http://public.openvidu.io/fakeaudio_with_padding.wav";
-
-        browser.uploadFileFromUrl(EUS_URL, videoUrl, fakeResourcesPathInBrowser,
-                fakeVideoWithPaddingName);
-        browser.uploadFileFromUrl(EUS_URL, audioUrl, fakeResourcesPathInBrowser,
-                fakeAudioWithPaddingName);
+        browser.uploadFileFromUrl(EUS_URL, FAKE_VIDEO_URL, fakeResourcesPathInBrowser,
+                FAKE_VIDEO_WITH_PADDING_NAME);
+        browser.uploadFileFromUrl(EUS_URL, FAKE_AUDIO_URL, fakeResourcesPathInBrowser,
+                FAKE_AUDIO_WITH_PADDING_NAME);
     }
 
     public String getVideoPathByLocalRecorderId(String localRecorderId) {
@@ -344,6 +362,8 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
         // Start WebRTCQoEMeter service in EUS
         String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
                 originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
+
+        publisherBrowser.getQoeServiceIds().add(qoeServiceId);
 
         // Wait for CSV and Get
         Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);

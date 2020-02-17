@@ -44,12 +44,31 @@ public class QoEMeterBaseTest {
     protected static List<BrowserClient> browserClientList;
 
     protected static boolean isDevelopment = false;
+
+    protected static String FAKE_VIDEO_URL = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
+    protected static String FAKE_AUDIO_URL = "http://public.openvidu.io/fakeaudio_with_padding.wav";
+    protected static String FAKE_VIDEO_WITH_PADDING_NAME = "fakevideo_with_padding2.y4m";
+    protected static String FAKE_AUDIO_WITH_PADDING_NAME = "fakeaudio_with_padding.wav";
+
+    // in milliseconds
+    protected static long FAKE_VIDEO_AND_AUDIO_DURATION = 30000;
+    protected static long FAKE_VIDEO_AND_AUDIO_PADDING_DURATION = 12000;
+
     public static MonitoringManager monitoringManager;
 
     public static void initParameters() {
         String openviduSecret = System.getenv("OPENVIDU_SECRET");
         String secondsOfWait = System.getenv("SECONDS_OF_WAIT");
         String browserPollInterval = System.getenv("BROWSER_POLL_INTERVAL");
+
+        String fakeVideoUrl = System.getenv("FAKE_VIDEO_URL");
+        String fakeAudioUrl = System.getenv("FAKE_AUDIO_URL");
+        String fakeVideoWithPaddingName = System.getenv("FAKE_VIDEO_WITH_PADDING_NAME");
+        String fakeAudioWithPaddingName = System.getenv("FAKE_AUDIO_WITH_PADDING_NAME");
+
+        String fakeVideoAndAudioDuration = System.getenv("FAKE_VIDEO_AND_AUDIO_DURATION");
+        String fakeVideoAndAudioPaddingDuration = System
+                .getenv("FAKE_VIDEO_AND_AUDIO_PADDING_DURATION");
 
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
@@ -60,6 +79,30 @@ public class QoEMeterBaseTest {
 
         if (browserPollInterval != null) {
             BROWSER_POLL_INTERVAL = Integer.parseInt(browserPollInterval);
+        }
+
+        if (fakeVideoUrl != null) {
+            FAKE_VIDEO_URL = fakeVideoUrl;
+        }
+
+        if (fakeAudioUrl != null) {
+            FAKE_AUDIO_URL = fakeAudioUrl;
+        }
+
+        if (fakeVideoWithPaddingName != null) {
+            FAKE_VIDEO_WITH_PADDING_NAME = fakeVideoWithPaddingName;
+        }
+
+        if (fakeAudioWithPaddingName != null) {
+            FAKE_AUDIO_WITH_PADDING_NAME = fakeAudioWithPaddingName;
+        }
+
+        if (fakeVideoAndAudioDuration != null) {
+            FAKE_VIDEO_AND_AUDIO_DURATION = Long.valueOf(fakeVideoAndAudioDuration);
+        }
+
+        if (fakeVideoAndAudioPaddingDuration != null) {
+            FAKE_VIDEO_AND_AUDIO_PADDING_DURATION = Long.valueOf(fakeVideoAndAudioPaddingDuration);
         }
 
     }
