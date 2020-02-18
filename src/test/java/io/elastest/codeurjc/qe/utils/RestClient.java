@@ -21,7 +21,7 @@ public class RestClient {
 
     // HTTP GET request
     public byte[] sendGet(String url) throws Exception {
-        logger.info("Doing get to {}", url);
+        logger.info("Doing GET to {}", url);
 
         // Do request
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -35,14 +35,14 @@ public class RestClient {
         response.close();
 
         if (statusCode != 200) {
-            throw new Exception("Error on attach file: Code " + statusCode);
+            throw new Exception("Error on GET: Code " + statusCode);
         }
         httpClient.close();
         return responseBody;
     }
 
     public HttpEntity sendPost(String urlString, String jsonBody) throws Exception {
-        logger.info("Sending post to {}", urlString);
+        logger.info("Sending POST to {}", urlString);
 
         CloseableHttpClient client = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(urlString);
@@ -61,7 +61,7 @@ public class RestClient {
         response.close();
 
         if (statusCode != 200) {
-            throw new Exception("Error on attach file: Code " + statusCode);
+            throw new Exception("Error on POST: Code " + statusCode);
         }
 
         client.close();
@@ -70,7 +70,7 @@ public class RestClient {
 
     public HttpEntity postMultipart(String urlString, String fileNameWithExt, byte[] body)
             throws Exception {
-        logger.info("Doing multipart post to {}", urlString);
+        logger.info("Doing Multipart POST to {}", urlString);
 
         // Do request
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -99,7 +99,7 @@ public class RestClient {
     }
 
     public byte[] delete(String urlString) throws Exception {
-        logger.info("Sending delete to {}", urlString);
+        logger.info("Sending DELETE to {}", urlString);
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -113,7 +113,7 @@ public class RestClient {
         response.close();
 
         if (statusCode != 200) {
-            throw new Exception("Error on attach file: Code " + statusCode);
+            throw new Exception("Error on DELETE: Code " + statusCode);
         }
 
         httpClient.close();
