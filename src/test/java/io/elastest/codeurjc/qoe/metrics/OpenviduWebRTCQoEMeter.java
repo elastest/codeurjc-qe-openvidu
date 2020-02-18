@@ -87,6 +87,11 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
 
             String user1VideoPathInUser2Browser = getVideoPathByLocalRecorderId(
                     user1InUser2LocalRecorderId);
+            try {
+                user1Browser.stopEusRecording(EUS_URL);
+                user2Browser.stopEusRecording(EUS_URL);
+            } catch (Exception e) {
+            }
 
             // Process and generate metrics
             CountDownLatchWithException waitForQoEMetrics = new CountDownLatchWithException(2);

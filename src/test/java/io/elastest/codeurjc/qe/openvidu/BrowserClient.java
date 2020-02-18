@@ -112,9 +112,9 @@ public class BrowserClient {
         return qoeServiceIds;
     }
 
-    public void setQoeServiceIds(List<String> qoeServiceIds) {
-        this.qoeServiceIds = qoeServiceIds;
-    }
+    /* ******************************************** */
+    /* ****************** EVENTS ****************** */
+    /* ******************************************** */
 
     public void startEventPolling(boolean processEvents, boolean processStats) {
         logger.info("Starting event polling in user {} session {}", userId, session);
@@ -269,6 +269,10 @@ public class BrowserClient {
 
     }
 
+    public List<JsonObject> getEventListByName(String eventName) {
+        return receivedEventsMap.get(eventName);
+    }
+
     public void dispose() {
         try {
             if (driver != null) {
@@ -280,6 +284,10 @@ public class BrowserClient {
         } catch (Exception e) {
         }
     }
+
+    /* ********************************************* */
+    /* ****************** Streams ****************** */
+    /* ********************************************* */
 
     public JsonArray getSubscriberStreams() throws Exception {
         String streams = (String) ((JavascriptExecutor) driver).executeScript(
@@ -356,6 +364,10 @@ public class BrowserClient {
         }
     }
 
+    /* ********************************************* */
+    /* ****************** EUS API ****************** */
+    /* ********************************************* */
+
     public byte[] getFile(String hubUrl, String completePath) throws Exception {
         if (hubUrl != null) {
             SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
@@ -428,10 +440,6 @@ public class BrowserClient {
         }
     }
 
-    public List<JsonObject> getEventListByName(String eventName) {
-        return receivedEventsMap.get(eventName);
-    }
-
     public void sendWebRTCQoEMeterMetricsTime(String hubUrl, String qoeServiceId, long startTime,
             long videoDuration) throws Exception {
         if (hubUrl != null) {
@@ -451,4 +459,18 @@ public class BrowserClient {
             restClient.sendPost(url, body.toString());
         }
     }
+
+    public void stopEusRecording(String hubUrl) throws Exception {
+        if (hubUrl != null) {
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+            logger.info("Stopping recording of session {}", sessionId);
+
+            String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            url += sessionId;
+            url += "/recording/stop";
+
+            restClient.delete(url);
+        }
+    }
+
 }
