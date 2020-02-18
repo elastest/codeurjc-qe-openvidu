@@ -164,6 +164,10 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
 
         if (events != null) {
             JsonObject event = events.get(0);
+            if (event.get("content").toString() == "Publisher") {
+                event = events.get(0);
+            }
+
             Long startEmisionDate = Long.valueOf(event.get("date").getAsString());
             long startTime = startEmisionDate + FAKE_VIDEO_AND_AUDIO_PADDING_DURATION;
             userBrowser.sendWebRTCQoEMeterMetricsTime(EUS_URL,
@@ -326,7 +330,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
             browserClient.waitForEvent("connectionCreated", USERS_BY_SESSION);
             browserClient.waitForEvent("accessAllowed", 1);
             browserClient.waitForEvent("streamCreated", USERS_BY_SESSION);
-            browserClient.waitForEvent("streamPlaying", 1);
+            browserClient.waitForEvent("streamPlaying", 2);
 
             browserClient.stopEventPolling();
         } catch (TimeoutException | NullPointerException e) {
