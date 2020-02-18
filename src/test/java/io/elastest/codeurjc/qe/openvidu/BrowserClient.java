@@ -436,7 +436,9 @@ public class BrowserClient {
             long videoDuration) throws Exception {
         if (hubUrl != null) {
             SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
-            logger.info("Sending WebRTC QoE metrics time {}", sessionId);
+            logger.info(
+                    "Sending WebRTC QoE metrics time from session {} and WebRTCQoEService id {}",
+                    sessionId, qoeServiceId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += sessionId;
@@ -446,7 +448,7 @@ public class BrowserClient {
             body.addProperty("startTime", startTime);
             body.addProperty("videoDuration", videoDuration);
 
-            restClient.sendPost(url, body.getAsString());
+            restClient.sendPost(url, body.toString());
         }
     }
 }
