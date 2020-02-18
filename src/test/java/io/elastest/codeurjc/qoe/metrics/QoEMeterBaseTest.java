@@ -54,6 +54,10 @@ public class QoEMeterBaseTest {
     protected static long FAKE_VIDEO_AND_AUDIO_DURATION = 30000;
     protected static long FAKE_VIDEO_AND_AUDIO_PADDING_DURATION = 12000;
 
+    protected static boolean USE_FAKE_QOE_VMAF_CSV = false;
+    protected static String FAKE_CSV_URL = "https://raw.githubusercontent.com/elastest/codeurjc-qe-openvidu/master/src/test/resources/data/vmaf.csv";
+    protected static String FAKE_CSV_NAME = "vmaf.csv";
+
     public static MonitoringManager monitoringManager;
 
     public static void initParameters() {
@@ -69,6 +73,10 @@ public class QoEMeterBaseTest {
         String fakeVideoAndAudioDuration = System.getenv("FAKE_VIDEO_AND_AUDIO_DURATION");
         String fakeVideoAndAudioPaddingDuration = System
                 .getenv("FAKE_VIDEO_AND_AUDIO_PADDING_DURATION");
+
+        String useFakeQoEVmafCSV = System.getenv("USE_FAKE_QOE_VMAF_CSV");
+        String fakeCsvUrl = System.getenv("FAKE_CSV_URL");
+        String fakeCsvName = System.getenv("FAKE_CSV_NAME");
 
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
@@ -105,6 +113,17 @@ public class QoEMeterBaseTest {
             FAKE_VIDEO_AND_AUDIO_PADDING_DURATION = Long.valueOf(fakeVideoAndAudioPaddingDuration);
         }
 
+        if (useFakeQoEVmafCSV != null) {
+            USE_FAKE_QOE_VMAF_CSV = "true".equals(useFakeQoEVmafCSV) ? true : false;
+        }
+
+        if (fakeCsvUrl != null) {
+            FAKE_CSV_URL = fakeCsvUrl;
+        }
+
+        if (fakeCsvName != null) {
+            FAKE_CSV_NAME = fakeCsvName;
+        }
     }
 
     @BeforeAll

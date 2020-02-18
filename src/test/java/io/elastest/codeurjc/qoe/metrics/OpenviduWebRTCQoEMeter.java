@@ -366,30 +366,40 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
     private void startAndProcessVideoMetrics(BrowserClient publisherBrowser,
             BrowserClient subscriberBrowser, String originalVideoInPublisherBrowser,
             String receivedVideoInSubscriber) throws Exception {
-        logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
 
-        // Start WebRTCQoEMeter service in EUS
-        String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
-                originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
+        if (USE_FAKE_QOE_VMAF_CSV) {
+            logger.info("Using own QoE-CSV for user {}. Creating WebRTCQoEMeter service first",
+                    publisherBrowser.getUserId());
+            String qoeServiceId = publisherBrowser.createWebRTCQoEMeter(EUS_URL);
+            publisherBrowser.getQoeServiceIds().add(qoeServiceId);
 
-        publisherBrowser.getQoeServiceIds().add(qoeServiceId);
+            publisherBrowser.uploadCsvToQoE(EUS_URL, qoeServiceId, FAKE_CSV_URL, FAKE_CSV_NAME);
+        } else {
+            logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
 
-        // Wait for CSV and Get
-        Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
+            // Start WebRTCQoEMeter service in EUS
+            String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
+                    originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
 
-        if (csvMap == null || csvMap.size() == 0) {
-            final String message = "Csv files List is null or empty for user "
-                    + publisherBrowser.getUserId();
-            throw new Exception(message);
-        }
+            publisherBrowser.getQoeServiceIds().add(qoeServiceId);
 
-        // Get Metrics
-        Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+            // Wait for CSV and Get
+            Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
 
-        if (metrics == null || metrics.size() == 0) {
-            final String message = "Metric files List is null or empty for user "
-                    + publisherBrowser.getUserId();
-            throw new Exception(message);
+            if (csvMap == null || csvMap.size() == 0) {
+                final String message = "Csv files List is null or empty for user "
+                        + publisherBrowser.getUserId();
+                throw new Exception(message);
+            }
+
+            // Get Metrics
+            Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+
+            if (metrics == null || metrics.size() == 0) {
+                final String message = "Metric files List is null or empty for user "
+                        + publisherBrowser.getUserId();
+                throw new Exception(message);
+            }
         }
     }
 

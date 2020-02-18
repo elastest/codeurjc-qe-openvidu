@@ -473,4 +473,41 @@ public class BrowserClient {
         }
     }
 
+    public String createWebRTCQoEMeter(String eusURL) throws Exception {
+        if (eusURL != null) {
+            logger.info("Starting WebRTC QoE Meter for user {}", getUserId());
+
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+
+            String url = eusURL.endsWith("/") ? eusURL : eusURL + "/";
+            url += "session/" + sessionId + "/webrtc/qoe/meter/create";
+
+            byte[] response = restClient.sendGet(url);
+
+            String id = new String(response);
+
+            logger.info("Created WebRTC QoE Meter for user {} successfully! Id {}", getUserId(),
+                    id);
+
+            return id;
+        }
+        return null;
+    }
+
+    public void uploadCsvToQoE(String hubUrl, String identifier, String fileUrl, String fileName)
+            throws Exception {
+        if (hubUrl != null) {
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+            logger.info("Starting upload of file {} to browser with session id {}", fileName,
+                    sessionId);
+
+            String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            url += "session/" + sessionId;
+            url += "/webrtc/qoe/meter/" + identifier + "/csv";
+            url += "?fileUrl=" + URLEncoder.encode(fileUrl, "UTF-8");
+            url += "&fileName=" + fileName;
+
+            restClient.sendPost(url, null);
+        }
+    }
 }
