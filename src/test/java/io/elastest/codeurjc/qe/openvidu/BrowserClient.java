@@ -449,7 +449,7 @@ public class BrowserClient {
                     sessionId, qoeServiceId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
-            url += sessionId;
+            url += "session/" + sessionId;
             url += "/webrtc/qoe/meter/" + qoeServiceId + "/metrics/time";
 
             JsonObject body = new JsonObject();
@@ -466,7 +466,7 @@ public class BrowserClient {
             logger.info("Stopping recording of session {}", sessionId);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
-            url += sessionId;
+            url += "session/" + sessionId;
             url += "/recording/stop";
 
             restClient.delete(url);
