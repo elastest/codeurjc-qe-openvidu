@@ -55,6 +55,19 @@ public class QoEMeterAWSBaseTest {
 
     protected static List<BrowserClient> browserClientList;
 
+    protected static String FAKE_VIDEO_URL = "http://public.openvidu.io/fakevideo_with_padding2.y4m";
+    protected static String FAKE_AUDIO_URL = "http://public.openvidu.io/fakeaudio_with_padding.wav";
+    protected static String FAKE_VIDEO_WITH_PADDING_NAME = "fakevideo_with_padding2.y4m";
+    protected static String FAKE_AUDIO_WITH_PADDING_NAME = "fakeaudio_with_padding.wav";
+
+    // in milliseconds
+    protected static long FAKE_VIDEO_AND_AUDIO_DURATION = 30000;
+    protected static long FAKE_VIDEO_AND_AUDIO_PADDING_DURATION = 12000;
+
+    protected static boolean USE_FAKE_QOE_VMAF_CSV = false;
+    protected static String FAKE_CSV_URL = "https://raw.githubusercontent.com/elastest/codeurjc-qe-openvidu/master/src/test/resources/data/vmaf.csv";
+    protected static String FAKE_CSV_NAME = "vmaf.csv";
+
     protected static JsonObject awsConfig;
 
     protected static final String AWS_AMI_ID = "ami-0bfc646d9bb6ad37c";
@@ -76,6 +89,19 @@ public class QoEMeterAWSBaseTest {
         String withStress = System.getenv("WITH_STRESS");
         String stressValue = System.getenv("STRESS_VALUE");
         String cronExpression = System.getenv("CRON_EXPRESSION");
+
+        String fakeVideoUrl = System.getenv("FAKE_VIDEO_URL");
+        String fakeAudioUrl = System.getenv("FAKE_AUDIO_URL");
+        String fakeVideoWithPaddingName = System.getenv("FAKE_VIDEO_WITH_PADDING_NAME");
+        String fakeAudioWithPaddingName = System.getenv("FAKE_AUDIO_WITH_PADDING_NAME");
+
+        String fakeVideoAndAudioDuration = System.getenv("FAKE_VIDEO_AND_AUDIO_DURATION");
+        String fakeVideoAndAudioPaddingDuration = System
+                .getenv("FAKE_VIDEO_AND_AUDIO_PADDING_DURATION");
+
+        String useFakeQoEVmafCSV = System.getenv("USE_FAKE_QOE_VMAF_CSV");
+        String fakeCsvUrl = System.getenv("FAKE_CSV_URL");
+        String fakeCsvName = System.getenv("FAKE_CSV_NAME");
 
         if (openviduSecret != null) {
             OPENVIDU_SECRET = openviduSecret;
@@ -106,6 +132,42 @@ public class QoEMeterAWSBaseTest {
 
         if (cronExpression != null) {
             CRON_EXPRESSION = cronExpression;
+        }
+
+        if (fakeVideoUrl != null) {
+            FAKE_VIDEO_URL = fakeVideoUrl;
+        }
+
+        if (fakeAudioUrl != null) {
+            FAKE_AUDIO_URL = fakeAudioUrl;
+        }
+
+        if (fakeVideoWithPaddingName != null) {
+            FAKE_VIDEO_WITH_PADDING_NAME = fakeVideoWithPaddingName;
+        }
+
+        if (fakeAudioWithPaddingName != null) {
+            FAKE_AUDIO_WITH_PADDING_NAME = fakeAudioWithPaddingName;
+        }
+
+        if (fakeVideoAndAudioDuration != null) {
+            FAKE_VIDEO_AND_AUDIO_DURATION = Long.valueOf(fakeVideoAndAudioDuration);
+        }
+
+        if (fakeVideoAndAudioPaddingDuration != null) {
+            FAKE_VIDEO_AND_AUDIO_PADDING_DURATION = Long.valueOf(fakeVideoAndAudioPaddingDuration);
+        }
+
+        if (useFakeQoEVmafCSV != null) {
+            USE_FAKE_QOE_VMAF_CSV = "true".equals(useFakeQoEVmafCSV) ? true : false;
+        }
+
+        if (fakeCsvUrl != null) {
+            FAKE_CSV_URL = fakeCsvUrl;
+        }
+
+        if (fakeCsvName != null) {
+            FAKE_CSV_NAME = fakeCsvName;
         }
     }
 

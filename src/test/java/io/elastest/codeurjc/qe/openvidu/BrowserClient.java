@@ -6,6 +6,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.channels.Channels;
@@ -32,6 +33,9 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.SessionId;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -510,5 +514,35 @@ public class BrowserClient {
 
             restClient.sendPost(url, null);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Double> getMetric(String hubUrl, String qoeServiceId) throws Exception {
+        if (hubUrl != null) {
+            logger.info("Getting metric generated in WebRTC QoE Meter");
+
+            SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
+
+            String urlPrefix = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
+            urlPrefix += "session/" + sessionId.toString() + "/webrtc/qoe/meter/" + qoeServiceId;
+
+            String url = urlPrefix + "/metric";
+            String response = new String(restClient.sendGet(url));
+            logger.info("CSV RESPONSE: {}", response);
+            Map<String, Double> metrics = null;
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+                metrics = (Map<String, Double>) objectMapper.readValue(response,
+                        new TypeReference<Map<String, Double>>() {
+                        });
+
+                return metrics;
+            } catch (IOException e) {
+                throw new Exception("Error during CSV list conversion: " + e.getMessage());
+            }
+        }
+        return null;
     }
 }

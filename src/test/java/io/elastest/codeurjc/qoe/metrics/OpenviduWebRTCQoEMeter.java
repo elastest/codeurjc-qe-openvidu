@@ -393,7 +393,7 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
             }
 
             // Get Metrics
-            Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+            Map<String, Double> metrics = publisherBrowser.getMetric(EUS_URL, qoeServiceId);
 
             if (metrics == null || metrics.size() == 0) {
                 final String message = "Metric files List is null or empty for user "
@@ -554,34 +554,4 @@ public class OpenviduWebRTCQoEMeter extends QoEMeterBaseTest {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<String, Double> getMetric(String qoeServiceId, BrowserClient browserClient)
-            throws Exception {
-        if (EUS_URL != null) {
-            logger.info("Getting metric generated in WebRTC QoE Meter");
-
-            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver()).getSessionId();
-
-            String urlPrefix = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            urlPrefix += "session/" + sessionId.toString() + "/webrtc/qoe/meter/" + qoeServiceId;
-
-            String url = urlPrefix + "/metric";
-            String response = new String(restClient.sendGet(url));
-            logger.info("CSV RESPONSE: {}", response);
-            Map<String, Double> metrics = null;
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-                metrics = (Map<String, Double>) objectMapper.readValue(response,
-                        new TypeReference<Map<String, Double>>() {
-                        });
-
-                return metrics;
-            } catch (IOException e) {
-                throw new Exception("Error during CSV list conversion: " + e.getMessage());
-            }
-        }
-        return null;
-    }
 }

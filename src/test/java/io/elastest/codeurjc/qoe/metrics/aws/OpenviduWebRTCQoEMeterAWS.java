@@ -35,8 +35,6 @@ import io.elastest.codeurjc.qe.utils.RestClient;
 
 public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
     final String fakeResourcesPathInBrowser = "/opt/openvidu/";
-    final String fakeVideoWithPaddingName = "fakevideo_with_padding2.y4m";
-    final String fakeAudioWithPaddingName = "fakeaudio_with_padding.wav";
 
     private static CountDownLatchWithException waitForSessionReadyLatch;
     public static ExecutorService browserInitializationTaskExecutor = Executors
@@ -99,7 +97,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
                     user1InUser2LocalRecorderId);
 
             // Process and generate metrics
-            CountDownLatchWithException waitForRecording = new CountDownLatchWithException(2);
+            CountDownLatchWithException waitForQoEMetrics = new CountDownLatchWithException(2);
 
             final List<Runnable> browserThreads = new ArrayList<>();
 
@@ -108,11 +106,11 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
                 try {
                     startAndProcessVideoMetrics(user1Browser, user2Browser,
                             user1VideoPathInUser1Browser, user1VideoPathInUser2Browser);
-                    waitForRecording.countDown();
+                    waitForQoEMetrics.countDown();
                 } catch (Exception e) {
                     logger.error("Error on process qoe metrics of user {} :{}",
                             user1Browser.getUserId(), e.getMessage());
-                    waitForRecording.abort(e.getMessage());
+                    waitForQoEMetrics.abort(e.getMessage());
                 }
             });
 
@@ -121,11 +119,11 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
                 try {
                     startAndProcessVideoMetrics(user2Browser, user1Browser,
                             user2VideoPathInUser2Browser, user2VideoPathInUser1Browser);
-                    waitForRecording.countDown();
+                    waitForQoEMetrics.countDown();
                 } catch (Exception e) {
                     logger.error("Error on process qoe metrics of user {} :{}",
                             user2Browser.getUserId(), e.getMessage());
-                    waitForRecording.abort(e.getMessage());
+                    waitForQoEMetrics.abort(e.getMessage());
                 }
             });
 
@@ -135,7 +133,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 
             try {
                 logger.info("Waiting for QoE metrics generated and attached");
-                waitForRecording.await();
+                waitForQoEMetrics.await();
                 logger.info("All QoE metrics are generated and attached!");
             } catch (AbortedException e) {
                 logger.error("Some QoE metrics has failed: {}", e.getMessage());
@@ -144,6 +142,13 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
             }
 
             sleep(20000);
+
+            // Browser 1
+            sendWebRTCQoEMeterMetricsTime(user1Browser);
+
+            // Browser 2
+            sendWebRTCQoEMeterMetricsTime(user2Browser);
+
         } catch (Exception e) {
             e.printStackTrace();
             Assertions.fail(e.getMessage());
@@ -243,10 +248,10 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 
                 // This flag sets the video input (with padding)
                 options.addArguments("--use-file-for-fake-video-capture="
-                        + fakeResourcesPathInBrowser + fakeVideoWithPaddingName);
+                        + fakeResourcesPathInBrowser + FAKE_VIDEO_WITH_PADDING_NAME);
                 // This flag sets the audio input
                 options.addArguments("--use-file-for-fake-audio-capture="
-                        + fakeResourcesPathInBrowser + fakeAudioWithPaddingName);
+                        + fakeResourcesPathInBrowser + FAKE_AUDIO_WITH_PADDING_NAME);
             } else { // Development (docker)
             }
 
@@ -365,9 +370,9 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
         String audioUrl = "http://public.openvidu.io/fakeaudio_with_padding.wav";
 
         browser.uploadFileFromUrl(EUS_URL, videoUrl, fakeResourcesPathInBrowser,
-                fakeVideoWithPaddingName);
+                FAKE_VIDEO_WITH_PADDING_NAME);
         browser.uploadFileFromUrl(EUS_URL, audioUrl, fakeResourcesPathInBrowser,
-                fakeAudioWithPaddingName);
+                FAKE_AUDIO_WITH_PADDING_NAME);
     }
 
     public String getVideoPathByLocalRecorderId(String localRecorderId) {
@@ -378,26 +383,36 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
     private void startAndProcessVideoMetrics(BrowserClient publisherBrowser,
             BrowserClient subscriberBrowser, String originalVideoInPublisherBrowser,
             String receivedVideoInSubscriber) throws Exception {
-        logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
 
-        // Start WebRTCQoEMeter service in EUS
-        String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
-                originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
+        if (USE_FAKE_QOE_VMAF_CSV) {
+            logger.info("Using own QoE-CSV for user {}. Creating WebRTCQoEMeter service first",
+                    publisherBrowser.getUserId());
+            String qoeServiceId = publisherBrowser.createWebRTCQoEMeter(EUS_URL);
+            publisherBrowser.getQoeServiceIds().add(qoeServiceId);
 
-        // Wait for CSV and Get
-        Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
+            publisherBrowser.uploadCsvToQoE(EUS_URL, qoeServiceId, FAKE_CSV_URL, FAKE_CSV_NAME);
+        } else {
+            logger.info("Starting process of user {} video metrics", publisherBrowser.getUserId());
 
-        if (csvMap == null || csvMap.size() == 0) {
-            Assertions.fail(
-                    "Csv files List is null or empty for user " + publisherBrowser.getUserId());
-        }
+            // Start WebRTCQoEMeter service in EUS
+            String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
+                    originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
 
-        // Get Metrics
-        Map<String, Double> metrics = getMetric(qoeServiceId, publisherBrowser);
+            // Wait for CSV and Get
+            Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
 
-        if (metrics == null || metrics.size() == 0) {
-            Assertions.fail(
-                    "Metric files List is null or empty for user " + publisherBrowser.getUserId());
+            if (csvMap == null || csvMap.size() == 0) {
+                Assertions.fail(
+                        "Csv files List is null or empty for user " + publisherBrowser.getUserId());
+            }
+
+            // Get Metrics
+            Map<String, Double> metrics = publisherBrowser.getMetric(EUS_URL, qoeServiceId);
+
+            if (metrics == null || metrics.size() == 0) {
+                Assertions.fail("Metric files List is null or empty for user "
+                        + publisherBrowser.getUserId());
+            }
         }
     }
 
@@ -485,7 +500,7 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
         }
 
         browser.stopRecording(localRecorderId);
-        
+
         sleep(15000);
 
         browser.downloadRecording(localRecorderId);
@@ -549,37 +564,6 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
             } catch (IOException e) {
                 throw new Exception("Error during CSV list conversion for user " + userId + ": "
                         + e.getMessage());
-            }
-        }
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, Double> getMetric(String qoeServiceId, BrowserClient browserClient)
-            throws Exception {
-        if (EUS_URL != null) {
-            logger.info("Getting metric generated in WebRTC QoE Meter");
-
-            SessionId sessionId = ((RemoteWebDriver) browserClient.getDriver()).getSessionId();
-
-            String urlPrefix = EUS_URL.endsWith("/") ? EUS_URL : EUS_URL + "/";
-            urlPrefix += "session/" + sessionId.toString() + "/webrtc/qoe/meter/" + qoeServiceId;
-
-            String url = urlPrefix + "/metric";
-            String response = new String(restClient.sendGet(url));
-            logger.info("CSV RESPONSE: {}", response);
-            Map<String, Double> metrics = null;
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-                metrics = (Map<String, Double>) objectMapper.readValue(response,
-                        new TypeReference<Map<String, Double>>() {
-                        });
-
-                return metrics;
-            } catch (IOException e) {
-                throw new Exception("Error during CSV list conversion: " + e.getMessage());
             }
         }
         return null;
@@ -654,4 +638,21 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
 //
 //        restClient.delete(url);
 //    }
+
+    private void sendWebRTCQoEMeterMetricsTime(BrowserClient userBrowser) throws Exception {
+        List<JsonObject> events = userBrowser.getEventListByName("streamPlaying");
+
+        if (events != null) {
+            JsonObject event = events.get(0);
+            if (event.get("content").toString() == "Publisher") {
+                event = events.get(0);
+            }
+
+            Long startEmisionDate = Long.valueOf(event.get("date").getAsString());
+            long startTime = startEmisionDate + FAKE_VIDEO_AND_AUDIO_PADDING_DURATION;
+            userBrowser.sendWebRTCQoEMeterMetricsTime(EUS_URL,
+                    userBrowser.getQoeServiceIds().get(0), startTime,
+                    FAKE_VIDEO_AND_AUDIO_DURATION);
+        }
+    }
 }
