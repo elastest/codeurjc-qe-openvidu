@@ -498,8 +498,9 @@ public class BrowserClient {
             throws Exception {
         if (hubUrl != null) {
             SessionId sessionId = ((RemoteWebDriver) getDriver()).getSessionId();
-            logger.info("Starting upload of file {} to browser with session id {}", fileName,
-                    sessionId);
+            logger.info(
+                    "Starting upload of csv file {} to browser with session id {} and WebRTCQoEMeter with id {}",
+                    fileName, sessionId, identifier);
 
             String url = hubUrl.endsWith("/") ? hubUrl : hubUrl + "/";
             url += "session/" + sessionId;
