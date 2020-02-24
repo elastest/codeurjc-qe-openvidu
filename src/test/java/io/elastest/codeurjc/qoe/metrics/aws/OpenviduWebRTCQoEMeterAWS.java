@@ -397,6 +397,8 @@ public class OpenviduWebRTCQoEMeterAWS extends QoEMeterAWSBaseTest {
             // Start WebRTCQoEMeter service in EUS
             String qoeServiceId = startWebRTCQoEMeter(receivedVideoInSubscriber,
                     originalVideoInPublisherBrowser, publisherBrowser, subscriberBrowser);
+            publisherBrowser.getQoeServiceIds().add(qoeServiceId);
+
 
             // Wait for CSV and Get
             Map<String, byte[]> csvMap = waitForCSV(qoeServiceId, publisherBrowser);
